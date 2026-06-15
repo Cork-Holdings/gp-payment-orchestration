@@ -3,6 +3,7 @@ package api
 import (
 	"os"
 
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/api/routes"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
 	"github.com/gin-gonic/gin"
 )
@@ -24,5 +25,9 @@ func Server(app *global.App) error {
 	e.GET("/health", func(c *gin.Context) {
 		c.String(200, "ok")
 	})
+
+	// routes.RegisterRoutes(e, app)
+	routes.RegisterRoutes(e)
+
 	return e.Run(":" + os.Getenv("LISTEN_ADDR"))
 }

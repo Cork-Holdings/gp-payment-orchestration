@@ -1,0 +1,80 @@
+
+syntax = "proto3";
+
+package fee-profiles;
+
+
+option go_package = "/proto/fee-profiles;fee-profiles";
+
+
+message CreateFeeProfileRequest {
+    string name = 1;
+    string code = 2;
+    string paymentChannelId = 3;
+    string transactionTypeId = 4;
+    string subTransactionTypeId = 5;
+    string status = 6;
+    string chargeAmount = 7;
+    string approvalStatus = 8;
+    string approvedBy = 9;
+    string approvedAt = 10;
+    string rejectedBy = 11;
+    string rejectedAt = 12;
+    string rejectedReason = 13;
+}
+
+
+message User {
+    string fullname = 1;
+    string email = 2;
+    string phone = 3;
+    string password = 4;
+    string role = 5;
+    string id =6;
+    string status =7;
+}
+
+
+message GetUsersRequest {
+    int32 page =1;
+    int32 pageSize =2;
+    string searchQuery=3;
+}
+
+message GetUsersResponse {
+    repeated User user = 1;       // List of users
+    int32 totalPages = 2;         // Total number of pages
+    int32 currentPage = 3;        // Current page
+    bool hasMore = 4;             // Whether there are more pages
+  }
+
+message EditUserRequest {
+    string fullname = 1;
+    string email = 2;
+    string phone = 3;
+    string password = 4;
+    string role = 5;
+    string id =6;
+    string status =7;
+}
+
+message LoginRequest{
+    string email =1;
+    string password = 2;
+    string portal =3;
+}
+
+message AuthResponse {
+    bool success = 1;
+    string message = 2;
+    string token = 3;
+    string status = 4;
+    string role = 5;
+    string id = 6;
+    repeated string permissions = 7; // List of permissions granted to the user
+    string token_expiry =9;
+    bool email_verified =10;
+    string account_status =11;
+    string email = 12;
+    string merchant_id =13;
+}
