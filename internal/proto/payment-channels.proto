@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package payment_channels;
+
+
+option go_package = "/proto/payment_channels;payment_channels";
+
+
+message CreatePaymentChannelRequest {
+    string name = 1;
+    string status = 2;
+    string payment_service_id = 3;
+    string transaction_type_id = 4;
+    string sub_transaction_type_id = 5;
+    string fee_type = 6;
+    string provider_fee = 7;
+}
+
+message PaymentChannel {
+    string name = 1;
+    string status = 2;
+    string payment_service_id = 3;
+    string transaction_type_id = 4;
+    string sub_transaction_type_id = 5;
+    string fee_type = 6;
+    string provider_fee = 7;
+    string id = 8;
+    string created_at = 9;
+    string updated_at = 10;
+    string logo = 11;
+}
+
+
+message GetPaymentChannelsRequest {
+    int32 page =1;
+    int32 page_size =2;
+    string search_query =3;
+    string payment_service_id = 4;
+    string transaction_type_id = 5;
+    string sub_transaction_type_id = 6;
+    string fee_type = 7;
+    string provider_fee = 8;
+}
+
+message GetPaymentChannelsResponse {
+    repeated PaymentChannel payment_channel = 1;       // List of payment channels
+    int32 total_pages = 2;         // Total number of pages
+    int32 current_page = 3;        // Current page
+    bool has_more = 4;             // Whether there are more pages
+  }
+
+message EditPaymentChannelRequest {
+    string name = 1;
+    string status = 3;
+    string payment_service_id = 4;
+    string transaction_type_id = 5;
+    string sub_transaction_type_id = 6;
+    string fee_type = 7;
+    string provider_fee = 8;
+    string id = 9;
+}

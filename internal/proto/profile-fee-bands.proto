@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package profile_fee_bands;
+
+
+option go_package = "/proto/profile_fee_bands;profile_fee_bands";
+
+
+message CreateProfileFeeBandsRequest {
+    string fee_profile_id = 1;
+    string min_amount = 2;
+    string max_amount = 3;
+    string charge_amount = 4;
+    string charge_type = 5;
+    string status = 6;
+}
+
+message ProfileFeeBands {
+    string fee_profile_id = 1;
+    string min_amount = 2;
+    string max_amount = 3;
+    string charge_amount = 4;
+    string charge_type = 5;
+    string status = 6;
+    string id = 8;
+    string created_at = 9;
+    string updated_at = 10;
+}
+
+
+message GetProfileFeeBandsRequest {
+    int32 page =1;
+    int32 page_size =2;
+    string search_query =3;
+}
+
+message GetProfileFeeBandsResponse {
+    repeated ProfileFeeBands profile_fee_bands = 1;       // List of profile fee bands
+    int32 total_pages = 2;         // Total number of pages
+    int32 current_page = 3;        // Current page
+    bool has_more = 4;             // Whether there are more pages
+  }
+
+message EditProfileFeeBandsRequest {
+    string name = 1;
+    string fee_profile_id = 2;
+    string min_amount = 3;
+    string max_amount = 4;
+    string charge_amount = 5;
+    string charge_type = 6;
+    string status = 7;
+    string id = 8;
+}

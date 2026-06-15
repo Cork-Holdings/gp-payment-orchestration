@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package prefixes;
+
+
+option go_package = "/proto/prefixes;prefixes";
+
+
+message CreatePrefixRequest {
+    string name = 1;
+    string status = 2;
+}
+
+message Prefix {
+    string name = 1;
+    string status = 2;
+    string id = 3;
+    string created_at = 4;
+    string updated_at = 5;
+}
+
+
+message GetPrefixesRequest {
+    int32 page =1;
+    int32 page_size =2;
+    string search_query =3;
+}
+
+message GetPrefixesResponse {
+    repeated Prefix prefix = 1;       // List of prefixes
+    int32 total_pages = 2;         // Total number of pages
+    int32 current_page = 3;        // Current page
+    bool has_more = 4;             // Whether there are more pages
+  }
+
+message EditPrefixRequest {
+    string name = 1;
+    string status = 2;
+    string id = 3;
+}

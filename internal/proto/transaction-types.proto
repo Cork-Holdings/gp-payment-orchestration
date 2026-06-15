@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package transaction_types;
+
+
+option go_package = "/proto/transaction_types;transaction_types";
+
+
+message CreateTransactionTypeRequest {
+    string name = 1;
+    string code = 2;
+    string max_amount = 3;
+    string min_amount = 4;
+    string status = 5;
+}
+
+message TransactionType {
+    string name = 1;
+    string code = 2;
+    string max_amount = 3;
+    string min_amount = 4;
+    string status = 5;
+    string id = 6;
+    string created_at = 7;
+    string updated_at = 8;
+}
+
+
+message GetTransactionTypesRequest {
+    int32 page =1;
+    int32 page_size =2;
+    string search_query =3;
+}
+
+message GetTransactionTypesResponse {
+    repeated TransactionType transaction_type = 1;       // List of transaction types
+    int32 total_pages = 2;         // Total number of pages
+    int32 current_page = 3;        // Current page
+    bool has_more = 4;             // Whether there are more pages
+  }
+
+message EditTransactionTypeRequest {
+    string name = 1;
+    string code = 2;
+    string max_amount = 3;
+    string min_amount = 4;
+    string status = 5;
+    string id = 6;
+}
+
+
+message CreateSubTransactionTypeRequest {
+    string name = 1;
+    string code = 2;
+    string max_amount = 3;
+    string min_amount = 4;
+    string status = 5;
+    string transaction_type_id = 6;
+}
+
+message SubTransactionType {
+    string name = 1;
+    string code = 2;
+    string max_amount = 3;
+    string min_amount = 4;
+    string status = 5;
+    string transaction_type_id = 6;
+    string id = 7;
+    string created_at = 8;
+    string updated_at = 9;
+}
+
+message GetSubTransactionTypesRequest {
+    int32 page =1;
+    int32 page_size =2;
+    string search_query =3;
+    string transaction_type_id = 4;
+}
+
+message GetSubTransactionTypesResponse {
+    repeated SubTransactionType sub_transaction_type = 1;       // List of sub transaction types
+    int32 total_pages = 2;         // Total number of pages
+    int32 current_page = 3;        // Current page
+    bool has_more = 4;             // Whether there are more pages
+  }
+
+message EditSubTransactionTypeRequest {
+    string name = 1;
+    string code = 2;
+    string max_amount = 3;
+    string min_amount = 4;
+    string status = 5;
+    string transaction_type_id = 6;
+    string id = 7;
+}

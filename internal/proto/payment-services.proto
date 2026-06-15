@@ -1,0 +1,42 @@
+
+syntax = "proto3";
+
+package payment_services;
+
+
+option go_package = "/proto/payment_services;payment_services";
+
+
+message CreatePaymentServiceRequest {
+    string name = 1;
+    string status = 2;
+}
+
+message PaymentService {
+    string name = 1;
+    string status = 2;
+    string logo = 3;
+    string id = 4;
+    string created_at = 5;
+    string updated_at = 6;
+}
+
+
+message GetPaymentServicesRequest {
+    int32 page =1;
+    int32 page_size =2;
+    string search_query =3;
+}
+
+message GetPaymentServicesResponse {
+    repeated PaymentService payment_service = 1;       // List of payment services
+    int32 total_pages = 2;         // Total number of pages
+    int32 current_page = 3;        // Current page
+    bool has_more = 4;             // Whether there are more pages
+  }
+
+message EditPaymentServiceRequest {
+    string name = 1;
+    string status = 2;
+    string id = 3;
+}

@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package merchant_fee_profile;
+
+
+option go_package = "/proto/merchant_fee_profile;merchant_fee_profile";
+
+
+message CreateMerchantFeeProfileRequest {
+    string merchant_id = 1;
+    string fee_profile_id = 2;
+    string status = 3;
+}
+
+message MerchantFeeProfile {
+    string merchant_id = 1;
+    string fee_profile_id = 2;
+    string status = 3;
+    string id = 4;
+    string created_at = 5;
+    string updated_at = 6;
+}
+
+
+message GetMerchantFeeProfilesRequest {
+    int32 page =1;
+    int32 page_size =2;
+    string search_query =3;
+}
+
+message GetMerchantFeeProfilesResponse {
+    repeated MerchantFeeProfile merchant_fee_profile = 1;       // List of merchant fee profiles
+    int32 total_pages = 2;         // Total number of pages
+    int32 current_page = 3;        // Current page
+    bool has_more = 4;             // Whether there are more pages
+  }
+
+message EditMerchantFeeProfileRequest {
+    string merchant_id = 1;
+    string fee_profile_id = 2;
+    string status = 3;
+    string id = 4;
+}

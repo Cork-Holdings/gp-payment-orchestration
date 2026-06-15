@@ -6,7 +6,7 @@ import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/cmd"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/feeprofiles"
-	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/subscriptions"
+	subscriptionsservice "github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/subscriptions_Service"
 	"github.com/joho/godotenv"
 )
 
@@ -28,8 +28,8 @@ func main() {
 		&feeprofiles.ProfileFeeBands{},
 		&feeprofiles.Prefix{},
 		&feeprofiles.PrefixPaymentChannel{},
-		&subscriptions.Subscription{},
-		&subscriptions.MerchantSubscription{},
+		&subscriptionsservice.Subscription{},
+		&subscriptionsservice.MerchantSubscription{},
 	)
 
 	cmd.Execute()

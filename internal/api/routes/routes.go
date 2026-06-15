@@ -24,4 +24,13 @@ func RegisterRoutes(e *gin.Engine) {
 		feeProfileRoutes.PUT("/update", handlers.UpdateFeeProfile)
 		feeProfileRoutes.DELETE("/delete/:id", handlers.DeleteFeeProfile)
 	}
+
+	subscriptionRoutes := e.Group("/subscriptions")
+	{
+		subscriptionRoutes.POST("/create", handlers.CreateSubscription)
+		subscriptionRoutes.GET("/list", handlers.GetSubscriptions)
+		subscriptionRoutes.GET("/get/:id", handlers.GetSubscription)
+		subscriptionRoutes.PUT("/update", handlers.UpdateSubscription)
+		subscriptionRoutes.DELETE("/delete/:id", handlers.DeleteSubscription)
+	}
 }

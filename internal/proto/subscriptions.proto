@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package subscriptions_proto;
+
+
+option go_package = "/proto/subscriptions_proto;subscriptions_proto";
+
+
+message CreateSubscriptionRequest {
+    string name = 1;
+    string status = 2;
+    string code = 3;
+}
+
+message Subscription {
+    string name = 1;
+    string status = 2;
+    string code = 3;
+    string id = 4;
+    string created_at = 5;
+    string updated_at = 6;
+}
+
+
+message GetSubscriptionsRequest {
+    int32 page =1;
+    int32 page_size =2;
+    string search_query =3;
+}
+
+message GetSubscriptionsResponse {
+    repeated Subscription subscription = 1;       // List of subscriptions
+    int32 total_pages = 2;         // Total number of pages
+    int32 current_page = 3;        // Current page
+    bool has_more = 4;             // Whether there are more pages
+  }
+
+message EditSubscriptionRequest {
+    string name = 1;
+    string status = 2;
+    string code = 3;
+}
+
+message CreateMerchantSubscriptionRequest {
+    string merchant_id = 1;
+    string subscription_id = 2;
+    string status = 3;
+}
+
+
+message MerchantSubscription {
+    string merchant_id = 1;
+    string subscription_id = 2;
+    string status = 3;
+    string id = 4;
+    string created_at = 5;
+    string updated_at = 6;
+}
+
+message GetMerchantSubscriptionsRequest {
+    int32 page =1;
+    int32 page_size =2;
+    string search_query =3;
+}
+
+message GetMerchantSubscriptionsResponse {
+    repeated MerchantSubscription merchant_subscription = 1;       // List of merchant subscriptions
+    int32 total_pages = 2;         // Total number of pages
+    int32 current_page = 3;        // Current page
+    bool has_more = 4;             // Whether there are more pages
+  } 
+
+message EditMerchantSubscriptionRequest {
+    string merchant_id = 1;
+    string subscription_id = 2;
+    string status = 3;
+}
+
+message DeleteMerchantSubscriptionRequest {
+    string merchant_id = 1;
+    string subscription_id = 2;
+}

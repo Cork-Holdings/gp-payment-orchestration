@@ -1,4 +1,4 @@
-package subscriptions
+package subscriptionsservice
 
 import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/common"

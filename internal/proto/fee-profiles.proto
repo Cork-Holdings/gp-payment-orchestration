@@ -1,80 +1,70 @@
 
 syntax = "proto3";
 
-package fee-profiles;
+package fee_profiles;
 
 
-option go_package = "/proto/fee-profiles;fee-profiles";
+option go_package = "/proto/fee_profiles;fee_profiles";
 
 
 message CreateFeeProfileRequest {
     string name = 1;
     string code = 2;
-    string paymentChannelId = 3;
-    string transactionTypeId = 4;
-    string subTransactionTypeId = 5;
+    string payment_channel_id = 3;
+    string transaction_type_id = 4;
+    string sub_transaction_type_id = 5;
     string status = 6;
-    string chargeAmount = 7;
-    string approvalStatus = 8;
-    string approvedBy = 9;
-    string approvedAt = 10;
-    string rejectedBy = 11;
-    string rejectedAt = 12;
-    string rejectedReason = 13;
+    string charge_amount = 7;
+    string approval_status = 8;
+    string approved_by = 9;
+    string approved_at = 10;
+    string rejected_by = 11;
+    string rejected_reason = 13;
 }
 
 
-message User {
-    string fullname = 1;
-    string email = 2;
-    string phone = 3;
-    string password = 4;
-    string role = 5;
-    string id =6;
-    string status =7;
+message FeeProfile {
+    string name = 1;
+    string code = 2;
+    string payment_channel_id = 3;
+    string transaction_type_id = 4;
+    string sub_transaction_type_id = 5;
+    string status = 6;
+    string charge_amount = 7;
+    string approval_status = 8;
+    string approved_by = 9;
+    string approved_at = 10;
+    string rejected_by = 11;
+    string rejected_reason = 13;
 }
 
 
-message GetUsersRequest {
+message GetFeeProfilesRequest {
     int32 page =1;
     int32 pageSize =2;
     string searchQuery=3;
 }
 
-message GetUsersResponse {
-    repeated User user = 1;       // List of users
+message GetFeeProfilesResponse {
+    repeated FeeProfile fee_profile = 1;       // List of fee profiles
     int32 totalPages = 2;         // Total number of pages
     int32 currentPage = 3;        // Current page
     bool hasMore = 4;             // Whether there are more pages
   }
 
-message EditUserRequest {
-    string fullname = 1;
-    string email = 2;
-    string phone = 3;
-    string password = 4;
-    string role = 5;
-    string id =6;
-    string status =7;
+message EditFeeProfileRequest {
+    string name = 1;
+    string code = 2;
+    string payment_channel_id = 3;
+    string transaction_type_id = 4;
+    string sub_transaction_type_id = 5;
+    string status = 6;
+    string charge_amount = 7;
+    string approval_status = 8;
+    string approved_by = 9;
+    string approved_at = 10;
+    string rejected_by = 11;
+    string rejected_reason = 12;
+    string id = 13;
 }
 
-message LoginRequest{
-    string email =1;
-    string password = 2;
-    string portal =3;
-}
-
-message AuthResponse {
-    bool success = 1;
-    string message = 2;
-    string token = 3;
-    string status = 4;
-    string role = 5;
-    string id = 6;
-    repeated string permissions = 7; // List of permissions granted to the user
-    string token_expiry =9;
-    bool email_verified =10;
-    string account_status =11;
-    string email = 12;
-    string merchant_id =13;
-}
