@@ -137,7 +137,7 @@ func (r *rmq) Consume(app *App, queueName string, reciever func(*App, amqp.Deliv
 	msgs, err := r.Channel.Consume(
 		queueName,
 		"",    // consumer tag
-		true,  // auto-acknowledge
+		false, // auto-acknowledge (manual ack)
 		false, // exclusive
 		false, // no-local
 		false, // no-wait
@@ -148,9 +148,14 @@ func (r *rmq) Consume(app *App, queueName string, reciever func(*App, amqp.Deliv
 	}
 	go func() {
 		for msg := range msgs {
-			if err := reciever(app, msg); err != nil {
-				continue
-			}
+			go func(m amqp.Delivery) {
+				if err := reciever(app, m); err != nil {
+					// On receiver error, send to DLQ (requeue=false)
+					m.Nack(false, false)
+					return
+				}
+				m.Ack(false)
+			}(msg)
 		}
 	}()
 	return nil
