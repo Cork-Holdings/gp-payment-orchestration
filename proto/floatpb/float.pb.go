@@ -371,7 +371,7 @@ const file_float_proto_rawDesc = "" +
 	"\fFloatService\x129\n" +
 	"\fRequestFloat\x12\x13.float.FloatRequest\x1a\x14.float.FloatResponse\x12@\n" +
 	"\fApproveFloat\x12\x1a.float.ApproveFloatRequest\x1a\x14.float.FloatResponse\x12J\n" +
-	"\x0fGetFloatBalance\x12\x1a.float.FloatBalanceRequest\x1a\x1b.float.FloatBalanceResponseB3Z1github.com/Cork-Holdings/gp_gateway/proto/floatpbb\x06proto3"
+	"\x0fGetFloatBalance\x12\x1a.float.FloatBalanceRequest\x1a\x1b.float.FloatBalanceResponseBAZ?github.com/Cork-Holdings/gp_payment_orchestration/proto/floatpbb\x06proto3"
 
 var (
 	file_float_proto_rawDescOnce sync.Once

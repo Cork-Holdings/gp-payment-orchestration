@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "github.com/Cork-Holdings/gp_payment_orchestration/proto/authpb";
+
+service AuthService {
+  rpc Login (LoginRequest) returns (LoginResponse);
+  rpc Refresh (RefreshRequest) returns (RefreshResponse);
+  rpc GetKeys (KeysRequest) returns (KeysResponse);
+  rpc GetRoles (RolesRequest) returns (RolesResponse);
+  rpc GetPermissions (PermissionsRequest) returns (PermissionsResponse);
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
+message RefreshRequest {
+  string refresh_token = 1;
+}
+
+message RefreshResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
+message KeysRequest {}
+
+message KeysResponse {
+  repeated string public_keys = 1;
+}
+
+message RolesRequest {}
+
+message RolesResponse {
+  repeated string roles = 1;
+}
+
+message PermissionsRequest {
+  string role = 1;
+}
+
+message PermissionsResponse {
+  repeated string permissions = 1;
+}

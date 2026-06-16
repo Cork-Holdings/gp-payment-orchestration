@@ -393,7 +393,7 @@ const file_settlement_proto_rawDesc = "" +
 	"\x11SettlementService\x12R\n" +
 	"\x13CalculateSettlement\x12\x1c.settlement.CalculateRequest\x1a\x1d.settlement.CalculateResponse\x12M\n" +
 	"\x10CreateSettlement\x12\x19.settlement.CreateRequest\x1a\x1e.settlement.SettlementResponse\x12O\n" +
-	"\x11ApproveSettlement\x12\x1a.settlement.ApproveRequest\x1a\x1e.settlement.SettlementResponseB8Z6github.com/Cork-Holdings/gp_gateway/proto/settlementpbb\x06proto3"
+	"\x11ApproveSettlement\x12\x1a.settlement.ApproveRequest\x1a\x1e.settlement.SettlementResponseBFZDgithub.com/Cork-Holdings/gp_payment_orchestration/proto/settlementpbb\x06proto3"
 
 var (
 	file_settlement_proto_rawDescOnce sync.Once

@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package settlement;
+
+option go_package = "github.com/Cork-Holdings/gp_payment_orchestration/proto/settlementpb";
+
+service SettlementService {
+  rpc CalculateSettlement (CalculateRequest) returns (CalculateResponse);
+  rpc CreateSettlement (CreateRequest) returns (SettlementResponse);
+  rpc ApproveSettlement (ApproveRequest) returns (SettlementResponse);
+}
+
+message CalculateRequest {
+  string start_date = 1;
+  string end_date = 2;
+  repeated string merchant_ids = 3;
+}
+
+message CalculateResponse {
+  string start_date = 1;
+  string end_date = 2;
+  double total_volume = 3;
+  double net_settlement_amount = 4;
+  double total_fees = 5;
+}
+
+message CreateRequest {
+  string merchant_id = 1;
+  double amount = 2;
+  string currency = 3;
+}
+
+message SettlementResponse {
+  string settlement_id = 1;
+  string merchant_id = 2;
+  double amount = 3;
+  string currency = 4;
+  string status = 5; // e.g. PENDING, APPROVED, REJECTED
+  string created_at = 6;
+}
+
+message ApproveRequest {
+  string settlement_id = 1;
+  string approver_id = 2;
+}

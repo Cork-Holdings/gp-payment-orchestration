@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package ledger;
+
+option go_package = "github.com/Cork-Holdings/gp_payment_orchestration/proto/ledgerpb";
+
+service LedgerService {
+  rpc CreateAccount (CreateAccountRequest) returns (AccountResponse);
+  rpc GetBalance (GetBalanceRequest) returns (BalanceResponse);
+  rpc Transfer (TransferRequest) returns (TransferResponse);
+  rpc BatchTransfer (BatchTransferRequest) returns (BatchTransferResponse);
+  rpc UpdateTransferStatus (UpdateStatusRequest) returns (UpdateStatusResponse);
+}
+
+message UpdateStatusRequest {
+  string transfer_id = 1;
+  string new_status = 2;
+}
+
+message UpdateStatusResponse {
+  string transfer_id = 1;
+  string status = 2;
+}
+
+message CreateAccountRequest {
+  string name = 1;
+  string currency = 2;
+  double initial_balance = 3;
+  string wallet_type = 4;
+}
+
+message AccountResponse {
+  string account_id = 1;
+  string name = 2;
+  string currency = 3;
+  double balance = 4;
+  int64 version = 5;
+  string wallet_type = 6;
+}
+
+message GetBalanceRequest {
+  string account_id = 1;
+}
+
+message BalanceResponse {
+  string account_id = 1;
+  double balance = 2;
+  string currency = 3;
+  bool cached = 4;
+}
+
+message TransferRequest {
+  string source_account_id = 1;
+  string destination_account_id = 2;
+  double amount = 3;
+  string currency = 4;
+  string transfer_id = 5;
+}
+
+message TransferResponse {
+  string transfer_id = 1;
+  string status = 2; // e.g. COMPLETED, FAILED
+  string error_reason = 3;
+}
+
+message BatchTransferRequest {
+  repeated TransferRequest transfers = 1;
+}
+
+message BatchTransferResponse {
+  repeated TransferResponse responses = 1;
+}

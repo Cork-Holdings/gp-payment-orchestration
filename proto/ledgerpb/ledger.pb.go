@@ -673,7 +673,7 @@ const file_ledger_proto_rawDesc = "" +
 	"GetBalance\x12\x19.ledger.GetBalanceRequest\x1a\x17.ledger.BalanceResponse\x12=\n" +
 	"\bTransfer\x12\x17.ledger.TransferRequest\x1a\x18.ledger.TransferResponse\x12L\n" +
 	"\rBatchTransfer\x12\x1c.ledger.BatchTransferRequest\x1a\x1d.ledger.BatchTransferResponse\x12Q\n" +
-	"\x14UpdateTransferStatus\x12\x1b.ledger.UpdateStatusRequest\x1a\x1c.ledger.UpdateStatusResponseB4Z2github.com/Cork-Holdings/gp_gateway/proto/ledgerpbb\x06proto3"
+	"\x14UpdateTransferStatus\x12\x1b.ledger.UpdateStatusRequest\x1a\x1c.ledger.UpdateStatusResponseBBZ@github.com/Cork-Holdings/gp_payment_orchestration/proto/ledgerpbb\x06proto3"
 
 var (
 	file_ledger_proto_rawDescOnce sync.Once
