@@ -19,10 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	LedgerService_CreateAccount_FullMethodName = "/ledger.LedgerService/CreateAccount"
-	LedgerService_GetBalance_FullMethodName    = "/ledger.LedgerService/GetBalance"
-	LedgerService_Transfer_FullMethodName      = "/ledger.LedgerService/Transfer"
-	LedgerService_BatchTransfer_FullMethodName = "/ledger.LedgerService/BatchTransfer"
+	LedgerService_CreateAccount_FullMethodName        = "/ledger.LedgerService/CreateAccount"
+	LedgerService_GetBalance_FullMethodName           = "/ledger.LedgerService/GetBalance"
+	LedgerService_Transfer_FullMethodName             = "/ledger.LedgerService/Transfer"
+	LedgerService_BatchTransfer_FullMethodName        = "/ledger.LedgerService/BatchTransfer"
+	LedgerService_UpdateTransferStatus_FullMethodName = "/ledger.LedgerService/UpdateTransferStatus"
 )
 
 // LedgerServiceClient is the client API for LedgerService service.
@@ -33,6 +34,7 @@ type LedgerServiceClient interface {
 	GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*BalanceResponse, error)
 	Transfer(ctx context.Context, in *TransferRequest, opts ...grpc.CallOption) (*TransferResponse, error)
 	BatchTransfer(ctx context.Context, in *BatchTransferRequest, opts ...grpc.CallOption) (*BatchTransferResponse, error)
+	UpdateTransferStatus(ctx context.Context, in *UpdateStatusRequest, opts ...grpc.CallOption) (*UpdateStatusResponse, error)
 }
 
 type ledgerServiceClient struct {
@@ -83,6 +85,16 @@ func (c *ledgerServiceClient) BatchTransfer(ctx context.Context, in *BatchTransf
 	return out, nil
 }
 
+func (c *ledgerServiceClient) UpdateTransferStatus(ctx context.Context, in *UpdateStatusRequest, opts ...grpc.CallOption) (*UpdateStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateStatusResponse)
+	err := c.cc.Invoke(ctx, LedgerService_UpdateTransferStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LedgerServiceServer is the server API for LedgerService service.
 // All implementations must embed UnimplementedLedgerServiceServer
 // for forward compatibility.
@@ -91,6 +103,7 @@ type LedgerServiceServer interface {
 	GetBalance(context.Context, *GetBalanceRequest) (*BalanceResponse, error)
 	Transfer(context.Context, *TransferRequest) (*TransferResponse, error)
 	BatchTransfer(context.Context, *BatchTransferRequest) (*BatchTransferResponse, error)
+	UpdateTransferStatus(context.Context, *UpdateStatusRequest) (*UpdateStatusResponse, error)
 	mustEmbedUnimplementedLedgerServiceServer()
 }
 
@@ -112,6 +125,9 @@ func (UnimplementedLedgerServiceServer) Transfer(context.Context, *TransferReque
 }
 func (UnimplementedLedgerServiceServer) BatchTransfer(context.Context, *BatchTransferRequest) (*BatchTransferResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method BatchTransfer not implemented")
+}
+func (UnimplementedLedgerServiceServer) UpdateTransferStatus(context.Context, *UpdateStatusRequest) (*UpdateStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateTransferStatus not implemented")
 }
 func (UnimplementedLedgerServiceServer) mustEmbedUnimplementedLedgerServiceServer() {}
 func (UnimplementedLedgerServiceServer) testEmbeddedByValue()                       {}
@@ -206,6 +222,24 @@ func _LedgerService_BatchTransfer_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LedgerService_UpdateTransferStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LedgerServiceServer).UpdateTransferStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LedgerService_UpdateTransferStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LedgerServiceServer).UpdateTransferStatus(ctx, req.(*UpdateStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LedgerService_ServiceDesc is the grpc.ServiceDesc for LedgerService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +262,10 @@ var LedgerService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BatchTransfer",
 			Handler:    _LedgerService_BatchTransfer_Handler,
+		},
+		{
+			MethodName: "UpdateTransferStatus",
+			Handler:    _LedgerService_UpdateTransferStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
