@@ -26,8 +26,7 @@ func Server(app *global.App) error {
 		c.String(200, "ok")
 	})
 
-	// routes.RegisterRoutes(e, app)
-	routes.RegisterRoutes(e)
+	routes.RegisterRoutes(e, app)
 
 	return e.Run(":" + os.Getenv("LISTEN_ADDR"))
 }

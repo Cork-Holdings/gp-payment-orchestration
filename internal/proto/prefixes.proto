@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package prefixes;
+package prefixes_proto;
 
 
-option go_package = "/proto/prefixes;prefixes";
+option go_package = "/proto/prefixes_proto;prefixes_proto";
 
 
 message CreatePrefixRequest {
@@ -27,7 +27,7 @@ message GetPrefixesRequest {
 }
 
 message GetPrefixesResponse {
-    repeated Prefix prefix = 1;       // List of prefixes
+    repeated Prefix prefixes = 1;       // List of prefixes
     int32 total_pages = 2;         // Total number of pages
     int32 current_page = 3;        // Current page
     bool has_more = 4;             // Whether there are more pages
@@ -37,4 +37,33 @@ message EditPrefixRequest {
     string name = 1;
     string status = 2;
     string id = 3;
+}
+
+
+message PrefixPaymentChannel {
+    string name = 1;
+    string prefix_id = 2;
+    string payment_channel_id = 3;
+    string created_at = 4;
+    string updated_at = 5;
+    string payment_channel_name = 6;
+}
+
+message CreatePrefixPaymentChannelRequest {
+    string prefix_id = 1;
+    string payment_channel_id = 2;
+}
+
+message GetPrefixPaymentChannelsRequest {
+    string prefix_id = 1;
+    string payment_channel_id = 2;
+    int32 page = 3;
+    int32 page_size = 4;
+}
+
+message GetPrefixPaymentChannelsResponse {
+    repeated PrefixPaymentChannel prefix_payment_channels = 1;
+    int32 total_pages = 2;
+    int32 current_page = 3;
+    bool has_more = 4;
 }

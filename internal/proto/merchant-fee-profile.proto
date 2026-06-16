@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package merchant_fee_profile;
+package merchant_fee_profile_proto;
 
 
-option go_package = "/proto/merchant_fee_profile;merchant_fee_profile";
+option go_package = "/proto/merchant_fee_profile_proto;merchant_fee_profile_proto";
 
 
 message CreateMerchantFeeProfileRequest {
@@ -19,6 +19,8 @@ message MerchantFeeProfile {
     string id = 4;
     string created_at = 5;
     string updated_at = 6;
+    string merchant_name = 7;
+    string fee_profile_name = 8;
 }
 
 

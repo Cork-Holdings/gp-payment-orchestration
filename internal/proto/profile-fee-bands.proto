@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package profile_fee_bands;
+package profile_fee_bands_proto;
 
 
-option go_package = "/proto/profile_fee_bands;profile_fee_bands";
+option go_package = "/proto/profile_fee_bands_proto;profile_fee_bands_proto";
 
 
 message CreateProfileFeeBandsRequest {
@@ -25,6 +25,7 @@ message ProfileFeeBands {
     string id = 8;
     string created_at = 9;
     string updated_at = 10;
+    string fee_profile_name = 11;
 }
 
 

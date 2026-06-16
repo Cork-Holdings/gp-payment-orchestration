@@ -1,0 +1,641 @@
+{
+	"info": {
+		"_postman_id": "8f8f8f8f-8f8f-8f8f-8f8f-8f8f8f8f8f8f",
+		"name": "GP Payment Orchestration API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Fee Profiles",
+			"item": [
+				{
+					"name": "List Fee Profiles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/fee-profiles/list?page=1&page_size=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"fee-profiles",
+								"list"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "page_size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Fee Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/fee-profiles/get/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"fee-profiles",
+								"get",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Fee Profile",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Standard Merchant Profile\",\n    \"code\": \"STD_MERCHANT\",\n    \"payment_channel_id\": \"\",\n    \"transaction_type_id\": \"\",\n    \"sub_transaction_type_id\": \"\",\n    \"status\": \"active\",\n    \"charge_amount\": \"20\",\n    \"approval_status\": \"approved\",\n    \"calculation_mode\": \"fixed\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/fee-profiles/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"fee-profiles",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Fee Profile",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"\",\n    \"name\": \"Updated Merchant Profile\",\n    \"code\": \"UPD_MERCHANT\",\n    \"status\": \"active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/fee-profiles/update",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"fee-profiles",
+								"update"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Fee Profile",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/fee-profiles/delete/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"fee-profiles",
+								"delete",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payment Services",
+			"item": [
+				{
+					"name": "List Payment Services",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payment-services/list",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payment-services",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Payment Service",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"M-Pesa\",\n    \"status\": \"active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payment-services/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payment-services",
+								"create"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payment Channels",
+			"item": [
+				{
+					"name": "List Payment Channels",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/payment-channels/list",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payment-channels",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Payment Channel",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"M-Pesa Paybill\",\n    \"code\": \"MPESA_PAYBILL\",\n    \"status\": \"active\",\n    \"payment_service_id\": \"\",\n    \"transaction_type_id\": \"\",\n    \"fee_type\": \"percentage\",\n    \"provider_fee\": \"1.5\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payment-channels/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payment-channels",
+								"create"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Transaction Types",
+			"item": [
+				{
+					"name": "List Transaction Types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transaction-types/list",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transaction-types",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Transaction Type",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Paybill\",\n    \"code\": \"PAYBILL\",\n    \"max_amount\": \"1000000\",\n    \"min_amount\": \"10\",\n    \"status\": \"active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/transaction-types/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transaction-types",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Sub Transaction Types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/transaction-types/sub/list",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transaction-types",
+								"sub",
+								"list"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Subscriptions",
+			"item": [
+				{
+					"name": "List Subscriptions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/subscriptions/list",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"subscriptions",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Subscription",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Basic Plan\",\n    \"status\": \"active\",\n    \"description\": \"Basic subscription plan\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/subscriptions/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"subscriptions",
+								"create"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Merchant Fee Profiles",
+			"item": [
+				{
+					"name": "List Merchant Fee Profiles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/merchant-fee-profiles/list",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"merchant-fee-profiles",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Merchant Fee Profile",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"merchant_id\": \"\",\n    \"fee_profile_id\": \"\",\n    \"status\": \"active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/merchant-fee-profiles/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"merchant-fee-profiles",
+								"create"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Channel Fee Bands",
+			"item": [
+				{
+					"name": "List Channel Fee Bands",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/channel-fee-bands/list",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"channel-fee-bands",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Channel Fee Band",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Standard Band\",\n    \"payment_channel_id\": \"\",\n    \"min_amount\": 0,\n    \"max_amount\": 1000000,\n    \"charge_amount\": 10,\n    \"status\": \"active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/channel-fee-bands/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"channel-fee-bands",
+								"create"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Profile Fee Bands",
+			"item": [
+				{
+					"name": "List Profile Fee Bands",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/profile-fee-bands/list",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"profile-fee-bands",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Profile Fee Band",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fee_profile_id\": \"\",\n    \"min_amount\": 0,\n    \"max_amount\": 1000000,\n    \"charge_amount\": 5,\n    \"charge_type\": \"fixed\",\n    \"status\": \"active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/profile-fee-bands/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"profile-fee-bands",
+								"create"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Prefixes",
+			"item": [
+				{
+					"name": "List Prefixes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/prefixes/list",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"prefixes",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Prefix",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"prefix\": \"254712\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/prefixes/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"prefixes",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Prefix Payment Channels",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/prefixes/channels/list",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"prefixes",
+								"channels",
+								"list"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Merchant Subscriptions",
+			"item": [
+				{
+					"name": "List Merchant Subscriptions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/merchant-subscriptions/list",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"merchant-subscriptions",
+								"list"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Merchant Subscription",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"merchant_id\": \"\",\n    \"subscription_id\": \"\",\n    \"status\": \"active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/merchant-subscriptions/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"merchant-subscriptions",
+								"create"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+}

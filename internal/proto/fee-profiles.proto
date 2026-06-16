@@ -1,10 +1,10 @@
 
 syntax = "proto3";
 
-package fee_profiles;
+package fee_profiles_proto;
 
 
-option go_package = "/proto/fee_profiles;fee_profiles";
+option go_package = "/proto/fee_profiles_proto;fee_profiles_proto";
 
 
 message CreateFeeProfileRequest {
@@ -20,6 +20,7 @@ message CreateFeeProfileRequest {
     string approved_at = 10;
     string rejected_by = 11;
     string rejected_reason = 13;
+    string calculation_mode = 14;
 }
 
 
@@ -36,6 +37,13 @@ message FeeProfile {
     string approved_at = 10;
     string rejected_by = 11;
     string rejected_reason = 13;
+    string calculation_mode = 14;
+    string id = 15;
+    string created_at = 16;
+    string updated_at = 17;
+    string payment_channel_name = 18;
+    string transaction_type_name = 19;
+    string sub_transaction_type_name = 20;
 }
 
 
@@ -66,5 +74,6 @@ message EditFeeProfileRequest {
     string rejected_by = 11;
     string rejected_reason = 12;
     string id = 13;
+    string calculation_mode = 14;
 }
 

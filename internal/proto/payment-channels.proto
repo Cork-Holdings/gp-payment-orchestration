@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package payment_channels;
+package payment_channels_proto;
 
 
-option go_package = "/proto/payment_channels;payment_channels";
+option go_package = "/proto/payment_channels_proto;payment_channels_proto";
 
 
 message CreatePaymentChannelRequest {

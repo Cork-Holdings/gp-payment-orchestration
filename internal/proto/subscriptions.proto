@@ -9,13 +9,13 @@ option go_package = "/proto/subscriptions_proto;subscriptions_proto";
 message CreateSubscriptionRequest {
     string name = 1;
     string status = 2;
-    string code = 3;
+    string description = 3;
 }
 
 message Subscription {
     string name = 1;
     string status = 2;
-    string code = 3;
+    string description = 3;
     string id = 4;
     string created_at = 5;
     string updated_at = 6;
@@ -29,7 +29,7 @@ message GetSubscriptionsRequest {
 }
 
 message GetSubscriptionsResponse {
-    repeated Subscription subscription = 1;       // List of subscriptions
+    repeated Subscription subscriptions = 1;       // List of subscriptions
     int32 total_pages = 2;         // Total number of pages
     int32 current_page = 3;        // Current page
     bool has_more = 4;             // Whether there are more pages
@@ -38,7 +38,8 @@ message GetSubscriptionsResponse {
 message EditSubscriptionRequest {
     string name = 1;
     string status = 2;
-    string code = 3;
+    string description = 3;
+    string id = 4;
 }
 
 message CreateMerchantSubscriptionRequest {
@@ -55,6 +56,7 @@ message MerchantSubscription {
     string id = 4;
     string created_at = 5;
     string updated_at = 6;
+    string subscription_name = 7;
 }
 
 message GetMerchantSubscriptionsRequest {
@@ -64,7 +66,7 @@ message GetMerchantSubscriptionsRequest {
 }
 
 message GetMerchantSubscriptionsResponse {
-    repeated MerchantSubscription merchant_subscription = 1;       // List of merchant subscriptions
+    repeated MerchantSubscription merchant_subscriptions = 1;       // List of merchant subscriptions
     int32 total_pages = 2;         // Total number of pages
     int32 current_page = 3;        // Current page
     bool has_more = 4;             // Whether there are more pages
@@ -74,6 +76,7 @@ message EditMerchantSubscriptionRequest {
     string merchant_id = 1;
     string subscription_id = 2;
     string status = 3;
+    string id = 4;
 }
 
 message DeleteMerchantSubscriptionRequest {

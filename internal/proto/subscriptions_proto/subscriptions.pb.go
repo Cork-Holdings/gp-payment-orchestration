@@ -25,7 +25,7 @@ type CreateSubscriptionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	Code          string                 `protobuf:"bytes,3,opt,name=code,proto3" json:"code,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -74,9 +74,9 @@ func (x *CreateSubscriptionRequest) GetStatus() string {
 	return ""
 }
 
-func (x *CreateSubscriptionRequest) GetCode() string {
+func (x *CreateSubscriptionRequest) GetDescription() string {
 	if x != nil {
-		return x.Code
+		return x.Description
 	}
 	return ""
 }
@@ -85,7 +85,7 @@ type Subscription struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	Code          string                 `protobuf:"bytes,3,opt,name=code,proto3" json:"code,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	Id            string                 `protobuf:"bytes,4,opt,name=id,proto3" json:"id,omitempty"`
 	CreatedAt     string                 `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     string                 `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
@@ -137,9 +137,9 @@ func (x *Subscription) GetStatus() string {
 	return ""
 }
 
-func (x *Subscription) GetCode() string {
+func (x *Subscription) GetDescription() string {
 	if x != nil {
-		return x.Code
+		return x.Description
 	}
 	return ""
 }
@@ -227,7 +227,7 @@ func (x *GetSubscriptionsRequest) GetSearchQuery() string {
 
 type GetSubscriptionsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Subscription  []*Subscription        `protobuf:"bytes,1,rep,name=subscription,proto3" json:"subscription,omitempty"`                   // List of subscriptions
+	Subscriptions []*Subscription        `protobuf:"bytes,1,rep,name=subscriptions,proto3" json:"subscriptions,omitempty"`                 // List of subscriptions
 	TotalPages    int32                  `protobuf:"varint,2,opt,name=total_pages,json=totalPages,proto3" json:"total_pages,omitempty"`    // Total number of pages
 	CurrentPage   int32                  `protobuf:"varint,3,opt,name=current_page,json=currentPage,proto3" json:"current_page,omitempty"` // Current page
 	HasMore       bool                   `protobuf:"varint,4,opt,name=has_more,json=hasMore,proto3" json:"has_more,omitempty"`             // Whether there are more pages
@@ -265,9 +265,9 @@ func (*GetSubscriptionsResponse) Descriptor() ([]byte, []int) {
 	return file_subscriptions_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetSubscriptionsResponse) GetSubscription() []*Subscription {
+func (x *GetSubscriptionsResponse) GetSubscriptions() []*Subscription {
 	if x != nil {
-		return x.Subscription
+		return x.Subscriptions
 	}
 	return nil
 }
@@ -297,7 +297,8 @@ type EditSubscriptionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	Code          string                 `protobuf:"bytes,3,opt,name=code,proto3" json:"code,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Id            string                 `protobuf:"bytes,4,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -346,9 +347,16 @@ func (x *EditSubscriptionRequest) GetStatus() string {
 	return ""
 }
 
-func (x *EditSubscriptionRequest) GetCode() string {
+func (x *EditSubscriptionRequest) GetDescription() string {
 	if x != nil {
-		return x.Code
+		return x.Description
+	}
+	return ""
+}
+
+func (x *EditSubscriptionRequest) GetId() string {
+	if x != nil {
+		return x.Id
 	}
 	return ""
 }
@@ -414,15 +422,16 @@ func (x *CreateMerchantSubscriptionRequest) GetStatus() string {
 }
 
 type MerchantSubscription struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	MerchantId     string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
-	SubscriptionId string                 `protobuf:"bytes,2,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
-	Status         string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
-	Id             string                 `protobuf:"bytes,4,opt,name=id,proto3" json:"id,omitempty"`
-	CreatedAt      string                 `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt      string                 `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	MerchantId       string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	SubscriptionId   string                 `protobuf:"bytes,2,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
+	Status           string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	Id               string                 `protobuf:"bytes,4,opt,name=id,proto3" json:"id,omitempty"`
+	CreatedAt        string                 `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt        string                 `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	SubscriptionName string                 `protobuf:"bytes,7,opt,name=subscription_name,json=subscriptionName,proto3" json:"subscription_name,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *MerchantSubscription) Reset() {
@@ -497,6 +506,13 @@ func (x *MerchantSubscription) GetUpdatedAt() string {
 	return ""
 }
 
+func (x *MerchantSubscription) GetSubscriptionName() string {
+	if x != nil {
+		return x.SubscriptionName
+	}
+	return ""
+}
+
 type GetMerchantSubscriptionsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
@@ -558,13 +574,13 @@ func (x *GetMerchantSubscriptionsRequest) GetSearchQuery() string {
 }
 
 type GetMerchantSubscriptionsResponse struct {
-	state                protoimpl.MessageState  `protogen:"open.v1"`
-	MerchantSubscription []*MerchantSubscription `protobuf:"bytes,1,rep,name=merchant_subscription,json=merchantSubscription,proto3" json:"merchant_subscription,omitempty"` // List of merchant subscriptions
-	TotalPages           int32                   `protobuf:"varint,2,opt,name=total_pages,json=totalPages,proto3" json:"total_pages,omitempty"`                              // Total number of pages
-	CurrentPage          int32                   `protobuf:"varint,3,opt,name=current_page,json=currentPage,proto3" json:"current_page,omitempty"`                           // Current page
-	HasMore              bool                    `protobuf:"varint,4,opt,name=has_more,json=hasMore,proto3" json:"has_more,omitempty"`                                       // Whether there are more pages
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	state                 protoimpl.MessageState  `protogen:"open.v1"`
+	MerchantSubscriptions []*MerchantSubscription `protobuf:"bytes,1,rep,name=merchant_subscriptions,json=merchantSubscriptions,proto3" json:"merchant_subscriptions,omitempty"` // List of merchant subscriptions
+	TotalPages            int32                   `protobuf:"varint,2,opt,name=total_pages,json=totalPages,proto3" json:"total_pages,omitempty"`                                 // Total number of pages
+	CurrentPage           int32                   `protobuf:"varint,3,opt,name=current_page,json=currentPage,proto3" json:"current_page,omitempty"`                              // Current page
+	HasMore               bool                    `protobuf:"varint,4,opt,name=has_more,json=hasMore,proto3" json:"has_more,omitempty"`                                          // Whether there are more pages
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *GetMerchantSubscriptionsResponse) Reset() {
@@ -597,9 +613,9 @@ func (*GetMerchantSubscriptionsResponse) Descriptor() ([]byte, []int) {
 	return file_subscriptions_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *GetMerchantSubscriptionsResponse) GetMerchantSubscription() []*MerchantSubscription {
+func (x *GetMerchantSubscriptionsResponse) GetMerchantSubscriptions() []*MerchantSubscription {
 	if x != nil {
-		return x.MerchantSubscription
+		return x.MerchantSubscriptions
 	}
 	return nil
 }
@@ -630,6 +646,7 @@ type EditMerchantSubscriptionRequest struct {
 	MerchantId     string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	SubscriptionId string                 `protobuf:"bytes,2,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
 	Status         string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	Id             string                 `protobuf:"bytes,4,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -681,6 +698,13 @@ func (x *EditMerchantSubscriptionRequest) GetSubscriptionId() string {
 func (x *EditMerchantSubscriptionRequest) GetStatus() string {
 	if x != nil {
 		return x.Status
+	}
+	return ""
+}
+
+func (x *EditMerchantSubscriptionRequest) GetId() string {
+	if x != nil {
+		return x.Id
 	}
 	return ""
 }
@@ -741,15 +765,15 @@ var File_subscriptions_proto protoreflect.FileDescriptor
 
 const file_subscriptions_proto_rawDesc = "" +
 	"\n" +
-	"\x13subscriptions.proto\x12\x13subscriptions_proto\"[\n" +
+	"\x13subscriptions.proto\x12\x13subscriptions_proto\"i\n" +
 	"\x19CreateSubscriptionRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
-	"\x06status\x18\x02 \x01(\tR\x06status\x12\x12\n" +
-	"\x04code\x18\x03 \x01(\tR\x04code\"\x9c\x01\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\"\xaa\x01\n" +
 	"\fSubscription\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
-	"\x06status\x18\x02 \x01(\tR\x06status\x12\x12\n" +
-	"\x04code\x18\x03 \x01(\tR\x04code\x12\x0e\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x0e\n" +
 	"\x02id\x18\x04 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
 	"created_at\x18\x05 \x01(\tR\tcreatedAt\x12\x1d\n" +
@@ -758,22 +782,23 @@ const file_subscriptions_proto_rawDesc = "" +
 	"\x17GetSubscriptionsRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12!\n" +
-	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\"\xc0\x01\n" +
-	"\x18GetSubscriptionsResponse\x12E\n" +
-	"\fsubscription\x18\x01 \x03(\v2!.subscriptions_proto.SubscriptionR\fsubscription\x12\x1f\n" +
+	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\"\xc2\x01\n" +
+	"\x18GetSubscriptionsResponse\x12G\n" +
+	"\rsubscriptions\x18\x01 \x03(\v2!.subscriptions_proto.SubscriptionR\rsubscriptions\x12\x1f\n" +
 	"\vtotal_pages\x18\x02 \x01(\x05R\n" +
 	"totalPages\x12!\n" +
 	"\fcurrent_page\x18\x03 \x01(\x05R\vcurrentPage\x12\x19\n" +
-	"\bhas_more\x18\x04 \x01(\bR\ahasMore\"Y\n" +
+	"\bhas_more\x18\x04 \x01(\bR\ahasMore\"w\n" +
 	"\x17EditSubscriptionRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
-	"\x06status\x18\x02 \x01(\tR\x06status\x12\x12\n" +
-	"\x04code\x18\x03 \x01(\tR\x04code\"\x85\x01\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x0e\n" +
+	"\x02id\x18\x04 \x01(\tR\x02id\"\x85\x01\n" +
 	"!CreateMerchantSubscriptionRequest\x12\x1f\n" +
 	"\vmerchant_id\x18\x01 \x01(\tR\n" +
 	"merchantId\x12'\n" +
 	"\x0fsubscription_id\x18\x02 \x01(\tR\x0esubscriptionId\x12\x16\n" +
-	"\x06status\x18\x03 \x01(\tR\x06status\"\xc6\x01\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\"\xf3\x01\n" +
 	"\x14MerchantSubscription\x12\x1f\n" +
 	"\vmerchant_id\x18\x01 \x01(\tR\n" +
 	"merchantId\x12'\n" +
@@ -783,22 +808,24 @@ const file_subscriptions_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x05 \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\x06 \x01(\tR\tupdatedAt\"u\n" +
+	"updated_at\x18\x06 \x01(\tR\tupdatedAt\x12+\n" +
+	"\x11subscription_name\x18\a \x01(\tR\x10subscriptionName\"u\n" +
 	"\x1fGetMerchantSubscriptionsRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12!\n" +
-	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\"\xe1\x01\n" +
-	" GetMerchantSubscriptionsResponse\x12^\n" +
-	"\x15merchant_subscription\x18\x01 \x03(\v2).subscriptions_proto.MerchantSubscriptionR\x14merchantSubscription\x12\x1f\n" +
+	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\"\xe3\x01\n" +
+	" GetMerchantSubscriptionsResponse\x12`\n" +
+	"\x16merchant_subscriptions\x18\x01 \x03(\v2).subscriptions_proto.MerchantSubscriptionR\x15merchantSubscriptions\x12\x1f\n" +
 	"\vtotal_pages\x18\x02 \x01(\x05R\n" +
 	"totalPages\x12!\n" +
 	"\fcurrent_page\x18\x03 \x01(\x05R\vcurrentPage\x12\x19\n" +
-	"\bhas_more\x18\x04 \x01(\bR\ahasMore\"\x83\x01\n" +
+	"\bhas_more\x18\x04 \x01(\bR\ahasMore\"\x93\x01\n" +
 	"\x1fEditMerchantSubscriptionRequest\x12\x1f\n" +
 	"\vmerchant_id\x18\x01 \x01(\tR\n" +
 	"merchantId\x12'\n" +
 	"\x0fsubscription_id\x18\x02 \x01(\tR\x0esubscriptionId\x12\x16\n" +
-	"\x06status\x18\x03 \x01(\tR\x06status\"m\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\x12\x0e\n" +
+	"\x02id\x18\x04 \x01(\tR\x02id\"m\n" +
 	"!DeleteMerchantSubscriptionRequest\x12\x1f\n" +
 	"\vmerchant_id\x18\x01 \x01(\tR\n" +
 	"merchantId\x12'\n" +
@@ -831,8 +858,8 @@ var file_subscriptions_proto_goTypes = []any{
 	(*DeleteMerchantSubscriptionRequest)(nil), // 10: subscriptions_proto.DeleteMerchantSubscriptionRequest
 }
 var file_subscriptions_proto_depIdxs = []int32{
-	1, // 0: subscriptions_proto.GetSubscriptionsResponse.subscription:type_name -> subscriptions_proto.Subscription
-	6, // 1: subscriptions_proto.GetMerchantSubscriptionsResponse.merchant_subscription:type_name -> subscriptions_proto.MerchantSubscription
+	1, // 0: subscriptions_proto.GetSubscriptionsResponse.subscriptions:type_name -> subscriptions_proto.Subscription
+	6, // 1: subscriptions_proto.GetMerchantSubscriptionsResponse.merchant_subscriptions:type_name -> subscriptions_proto.MerchantSubscription
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name

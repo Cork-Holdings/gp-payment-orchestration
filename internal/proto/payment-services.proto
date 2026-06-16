@@ -1,10 +1,10 @@
 
 syntax = "proto3";
 
-package payment_services;
+package payment_services_proto;
 
 
-option go_package = "/proto/payment_services;payment_services";
+option go_package = "/proto/payment_services_proto;payment_services_proto";
 
 
 message CreatePaymentServiceRequest {

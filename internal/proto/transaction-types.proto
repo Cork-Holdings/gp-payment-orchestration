@@ -3,7 +3,7 @@ syntax = "proto3";
 package transaction_types;
 
 
-option go_package = "/proto/transaction_types;transaction_types";
+option go_package = "/proto/transaction_types_proto;transaction_types_proto";
 
 
 message CreateTransactionTypeRequest {

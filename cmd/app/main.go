@@ -6,7 +6,12 @@ import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/cmd"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/feeprofiles"
-	subscriptionsservice "github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/subscriptions_Service"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantfeeprofiles"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentchannels"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentservices"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/prefixes"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/subscriptions"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/transactiontypes"
 	"github.com/joho/godotenv"
 )
 
@@ -19,17 +24,17 @@ func main() {
 
 	app.Register(
 		&feeprofiles.FeeProfile{},
-		&feeprofiles.PaymentService{},
-		&feeprofiles.PaymentChannel{},
-		&feeprofiles.TransactionType{},
-		&feeprofiles.SubTransactionType{},
-		&feeprofiles.MerchantFeeProfile{},
-		&feeprofiles.ChannelFeeBands{},
 		&feeprofiles.ProfileFeeBands{},
-		&feeprofiles.Prefix{},
-		&feeprofiles.PrefixPaymentChannel{},
-		&subscriptionsservice.Subscription{},
-		&subscriptionsservice.MerchantSubscription{},
+		&paymentservices.PaymentService{},
+		&paymentchannels.PaymentChannel{},
+		&paymentchannels.ChannelFeeBands{},
+		&transactiontypes.TransactionType{},
+		&transactiontypes.SubTransactionType{},
+		&merchantfeeprofiles.MerchantFeeProfile{},
+		&prefixes.Prefix{},
+		&prefixes.PrefixPaymentChannel{},
+		&subscriptions.Subscription{},
+		&subscriptions.MerchantSubscription{},
 	)
 
 	cmd.Execute()
