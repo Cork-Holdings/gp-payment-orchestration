@@ -13,9 +13,11 @@ import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
 	ledgergrpc "github.com/Cork-Holdings/gp_payment_orchestration/internal/grpc"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/approvals"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/auth"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/ledger"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/mq"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/tasks"
+	"github.com/Cork-Holdings/gp_payment_orchestration/proto/authpb"
 	"github.com/Cork-Holdings/gp_payment_orchestration/proto/ledgerpb"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -30,8 +32,8 @@ var serveCmd = &cobra.Command{
 
 		app := global.New()
 
-		// Register and migrate ledger and approvals models
-		app.Register(&ledger.Account{}, &approvals.ApprovalRequest{})
+		// Register and migrate ledger, approvals, and auth models
+		app.Register(&ledger.Account{}, &approvals.ApprovalRequest{}, &auth.User{})
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -45,6 +47,7 @@ var serveCmd = &cobra.Command{
 		}
 		grpcServer := grpc.NewServer()
 		ledgerpb.RegisterLedgerServiceServer(grpcServer, ledgergrpc.NewLedgerServer(app))
+		authpb.RegisterAuthServiceServer(grpcServer, ledgergrpc.NewAuthServer(app))
 
 		go func() {
 			log.Println("Starting gRPC server on port 50052...")
