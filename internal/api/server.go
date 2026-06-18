@@ -28,8 +28,6 @@ func Server(app *global.App) error {
 
 	routes.RegisterRoutes(e)
 	routes.RegisterApprovalRoutes(e, app)
-	routes.RegisterAuthRoutes(e, app)
-	routes.RegisterLedgerRoutes(e, app)
 
 	return e.Run(":" + os.Getenv("LISTEN_ADDR"))
 }

@@ -391,7 +391,7 @@ const file_kyc_proto_rawDesc = "" +
 	"KYCService\x12L\n" +
 	"\x11UploadKYCDocument\x12\x1a.kyc.UploadDocumentRequest\x1a\x1b.kyc.UploadDocumentResponse\x12=\n" +
 	"\fGetKYCStatus\x12\x15.kyc.KYCStatusRequest\x1a\x16.kyc.KYCStatusResponse\x12;\n" +
-	"\x0ePerformAMLScan\x12\x13.kyc.AMLScanRequest\x1a\x14.kyc.AMLScanResponseB?Z=github.com/Cork-Holdings/gp_payment_orchestration/proto/kycpbb\x06proto3"
+	"\x0ePerformAMLScan\x12\x13.kyc.AMLScanRequest\x1a\x14.kyc.AMLScanResponseB1Z/github.com/Cork-Holdings/gp_gateway/proto/kycpbb\x06proto3"
 
 var (
 	file_kyc_proto_rawDescOnce sync.Once
