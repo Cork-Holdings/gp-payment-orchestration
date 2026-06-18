@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"log"
-	"net"
 	"os"
 	"os/signal"
 	"sync"
@@ -11,14 +10,9 @@ import (
 
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/api"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
-	ledgergrpc "github.com/Cork-Holdings/gp_payment_orchestration/internal/grpc"
-	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/approvals"
-	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/ledger"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/mq"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/tasks"
-	"github.com/Cork-Holdings/gp_payment_orchestration/proto/ledgerpb"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
 )
 
 var serveCmd = &cobra.Command{
@@ -30,29 +24,10 @@ var serveCmd = &cobra.Command{
 
 		app := global.New()
 
-		// Register and migrate ledger and approvals models
-		app.Register(&ledger.Account{}, &approvals.ApprovalRequest{})
-
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
 		var wg sync.WaitGroup
-
-		// Start gRPC Server
-		lis, err := net.Listen("tcp", ":50052")
-		if err != nil {
-			log.Fatalf("Failed to listen on port 50052: %v", err)
-		}
-		grpcServer := grpc.NewServer()
-		ledgerpb.RegisterLedgerServiceServer(grpcServer, ledgergrpc.NewLedgerServer(app))
-
-		go func() {
-			log.Println("Starting gRPC server on port 50052...")
-			if err := grpcServer.Serve(lis); err != nil {
-				log.Printf("gRPC server stopped: %v", err)
-				cancel()
-			}
-		}()
 
 		// API Server
 		go func() {
@@ -105,8 +80,6 @@ var serveCmd = &cobra.Command{
 			log.Println("Application stopping...")
 		}
 
-		log.Println("Gracefully stopping gRPC server...")
-		grpcServer.GracefulStop()
 		app.Close()
 
 		log.Println("Shutdown complete")
