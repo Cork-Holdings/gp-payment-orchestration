@@ -5,6 +5,7 @@ import (
 
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/api/routes"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/m_api"
 	"github.com/gin-gonic/gin"
 )
 
@@ -28,6 +29,8 @@ func Server(app *global.App) error {
 
 	// routes.RegisterRoutes(e, app)
 	routes.RegisterRoutes(e)
+
+	m_api.RegisterMerchantRoutes(e, app)
 
 	return e.Run(":" + os.Getenv("LISTEN_ADDR"))
 }

@@ -40,25 +40,31 @@ var o sync.Once
 func New() *App {
 	o.Do(func() {
 		a = &App{
-			DB: GetDB(),
-			// Mongo:       GetMongo(),
-			// MongoDBName: GetMongoDBName(),
-			Validator: GetValidator(),
-			// TaskQ:     GetTaskQueue(),
-			// Cache:     GetCache(),
-			IO: GetSocketIO(),
-			MQ: GetMQ(),
+			DB:          GetDB(),
+			Mongo:       GetMongo(),
+			MongoDBName: GetMongoDBName(),
+			Validator:   GetValidator(),
+			TaskQ:       GetTaskQueue(),
+			Cache:       GetCache(),
+			IO:          GetSocketIO(),
+			MQ:          GetMQ(),
 		}
 	})
 	return a
 }
 
 func (a *App) Close() {
-	a.TaskQ.Close()
-	a.Cache.Close()
+	if a.TaskQ != nil {
+		a.TaskQ.Close()
+	}
+	if a.Cache != nil {
+		a.Cache.Close()
+	}
 	closeDB()
-	// closeMongo()
-	io.Close()
+	closeMongo()
+	if io != nil {
+		io.Close()
+	}
 }
 
 func (a *App) Register(models ...Model) {
