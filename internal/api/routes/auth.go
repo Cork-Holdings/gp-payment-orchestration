@@ -16,7 +16,7 @@ func RegisterAuthRoutes(e *gin.Engine, app *global.App) {
 	// Establish gRPC connection to Auth Service
 	addr := os.Getenv("AUTH_SERVICE_ADDR")
 	if addr == "" {
-		addr = "localhost:50052"
+		addr = "localhost:50051"
 	}
 
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
