@@ -55,7 +55,7 @@ func GetMerchantFeeProfiles(req *merchant_fee_profile_proto.GetMerchantFeeProfil
 	limit := uint(pageSize)
 	offset := uint((page - 1) * pageSize)
 
-	query := global.GetDB().Model(&MerchantFeeProfile{}).Preload("FeeProfile").Preload("Merchant")
+	query := global.GetDB().Model(&MerchantFeeProfile{}).Preload("FeeProfile")
 
 	if searchQuery != "" {
 		if _, err := uuid.Parse(searchQuery); err == nil {

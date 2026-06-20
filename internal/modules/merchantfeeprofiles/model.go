@@ -2,15 +2,17 @@ package merchantfeeprofiles
 
 import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/common"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/feeprofiles"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type MerchantFeeProfile struct {
-	ID           uuid.UUID `gorm:"type:uuid;primary_key"`
-	MerchantID   uuid.UUID `gorm:"type:uuid;not null"`
-	FeeProfileID uuid.UUID `gorm:"type:uuid;not null"`
-	Status       string    `gorm:"type:varchar(255);not null"`
+	ID           uuid.UUID              `gorm:"type:uuid;primary_key"`
+	MerchantID   uuid.UUID              `gorm:"type:uuid;not null"`
+	FeeProfileID uuid.UUID              `gorm:"type:uuid;not null"`
+	FeeProfile   feeprofiles.FeeProfile `gorm:"foreignKey:FeeProfileID"`
+	Status       string                 `gorm:"type:varchar(255);not null"`
 	common.Entity
 }
 

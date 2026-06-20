@@ -13,6 +13,7 @@ import (
 func CreateFeeProfile(req *fee_profiles_proto.CreateFeeProfileRequest) error {
 
 	chargeAmount, _ := strconv.ParseFloat(req.ChargeAmount, 64)
+	minimumFee, _ := strconv.ParseFloat(req.MinimumFee, 64)
 
 	feeprofile := FeeProfile{
 		ID:                uuid.New(),
@@ -24,6 +25,8 @@ func CreateFeeProfile(req *fee_profiles_proto.CreateFeeProfileRequest) error {
 		ChargeAmount:      chargeAmount,
 		ApprovalStatus:    "pending",
 		CalculationMode:   req.CalculationMode,
+		ChargeType:        req.ChargeType,
+		MinimumFee:        minimumFee,
 	}
 	tx := global.GetDB().Begin()
 	defer func() {

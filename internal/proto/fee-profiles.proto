@@ -21,6 +21,8 @@ message CreateFeeProfileRequest {
     string rejected_by = 11;
     string rejected_reason = 13;
     string calculation_mode = 14;
+    string charge_type = 15;
+    string minimum_fee = 16;
 }
 
 

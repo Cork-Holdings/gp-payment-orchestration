@@ -108,4 +108,13 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 		merchantSubscriptionRoutes.PUT("/update", handlers.UpdateMerchantSubscriptionHandler)
 		merchantSubscriptionRoutes.DELETE("/delete/:id", handlers.DeleteMerchantSubscriptionHandler)
 	}
+
+	merchantPaymentChannelsRoutes := e.Group("/merchant-payment-channels")
+	{
+		merchantPaymentChannelsRoutes.POST("/create", handlers.CreateMerchantPaymentChannelHandler)
+		merchantPaymentChannelsRoutes.GET("/list", handlers.GetMerchantPaymentChannelsHandler)
+		merchantPaymentChannelsRoutes.GET("/get/:id", handlers.GetMerchantPaymentChannelHandler)
+		merchantPaymentChannelsRoutes.PUT("/update", handlers.UpdateMerchantPaymentChannelHandler)
+		merchantPaymentChannelsRoutes.DELETE("/delete/:id", handlers.DeleteMerchantPaymentChannelHandler)
+	}
 }

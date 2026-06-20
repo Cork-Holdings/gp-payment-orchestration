@@ -11,24 +11,26 @@ import (
 )
 
 type FeeProfile struct {
-	ID                   uuid.UUID                          `gorm:"type:uuid;primary_key"`
-	Name                 string                             `gorm:"type:varchar(255);not null"`
-	Code                 string                             `gorm:"type:varchar(255);not null"`
-	PaymentChannelID     uuid.UUID                          `gorm:"type:uuid;not null"`
-	PaymentChannel       paymentchannels.PaymentChannel     `gorm:"foreignKey:PaymentChannelID"`
-	TransactionTypeID    uuid.UUID                          `gorm:"type:uuid;not null"`
+	ID                   uuid.UUID                           `gorm:"type:uuid;primary_key"`
+	Name                 string                              `gorm:"type:varchar(255);not null"`
+	Code                 string                              `gorm:"type:varchar(255);not null"`
+	PaymentChannelID     uuid.UUID                           `gorm:"type:uuid;not null"`
+	PaymentChannel       paymentchannels.PaymentChannel      `gorm:"foreignKey:PaymentChannelID"`
+	TransactionTypeID    uuid.UUID                           `gorm:"type:uuid;not null"`
 	TransactionType      transactiontypes.TransactionType    `gorm:"foreignKey:TransactionTypeID"`
-	SubTransactionTypeID uuid.UUID                          `gorm:"type:uuid;default:null"`
+	SubTransactionTypeID uuid.UUID                           `gorm:"type:uuid;default:null"`
 	SubTransactionType   transactiontypes.SubTransactionType `gorm:"foreignKey:SubTransactionTypeID"`
-	Status               string                             `gorm:"type:varchar(255);not null"`
-	ChargeAmount         float64                            `gorm:"type:decimal(10,2);not null"`
-	ApprovalStatus       string                             `gorm:"type:varchar(255);not null"`
-	ApprovedBy           uuid.UUID                          `gorm:"type:uuid;default:null"`
-	ApprovedAt           *time.Time                         `gorm:"type:timestamp;default:null"`
-	RejectedBy           uuid.UUID                          `gorm:"type:uuid;default:null"`
-	RejectedAt           *time.Time                         `gorm:"type:timestamp;default:null"`
-	RejectedReason       string                             `gorm:"type:varchar(255);default:null"`
-	CalculationMode      string                             `gorm:"type:varchar(255);not null"`
+	Status               string                              `gorm:"type:varchar(255);default:inactive"`
+	ChargeAmount         float64                             `gorm:"type:decimal(10,2);not null"`
+	ApprovalStatus       string                              `gorm:"type:varchar(255);default:pending"`
+	ApprovedBy           uuid.UUID                           `gorm:"type:uuid;default:null"`
+	ApprovedAt           *time.Time                          `gorm:"type:timestamp;default:null"`
+	RejectedBy           uuid.UUID                           `gorm:"type:uuid;default:null"`
+	RejectedAt           *time.Time                          `gorm:"type:timestamp;default:null"`
+	RejectedReason       string                              `gorm:"type:varchar(255);default:null"`
+	CalculationMode      string                              `gorm:"type:varchar(255);not null"`
+	ChargeType           string                              `gorm:"type:varchar(255);default:percentage"`
+	MinimumFee           float64                             `gorm:"type:decimal(10,2);default:0"`
 	common.Entity
 }
 
@@ -40,7 +42,7 @@ type ProfileFeeBands struct {
 	MaxAmount    float64    `gorm:"type:decimal(10,2);not null"`
 	ChargeAmount float64    `gorm:"type:decimal(10,2);not null"`
 	ChargeType   string     `gorm:"type:varchar(255);not null"`
-	Status       string     `gorm:"type:varchar(255);not null"`
+	Status       string     `gorm:"type:varchar(255);default:inactive"`
 	common.Entity
 }
 

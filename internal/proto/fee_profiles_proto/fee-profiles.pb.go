@@ -36,6 +36,8 @@ type CreateFeeProfileRequest struct {
 	RejectedBy           string                 `protobuf:"bytes,11,opt,name=rejected_by,json=rejectedBy,proto3" json:"rejected_by,omitempty"`
 	RejectedReason       string                 `protobuf:"bytes,13,opt,name=rejected_reason,json=rejectedReason,proto3" json:"rejected_reason,omitempty"`
 	CalculationMode      string                 `protobuf:"bytes,14,opt,name=calculation_mode,json=calculationMode,proto3" json:"calculation_mode,omitempty"`
+	ChargeType           string                 `protobuf:"bytes,15,opt,name=charge_type,json=chargeType,proto3" json:"charge_type,omitempty"`
+	MinimumFee           string                 `protobuf:"bytes,16,opt,name=minimum_fee,json=minimumFee,proto3" json:"minimum_fee,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -161,6 +163,20 @@ func (x *CreateFeeProfileRequest) GetCalculationMode() string {
 	return ""
 }
 
+func (x *CreateFeeProfileRequest) GetChargeType() string {
+	if x != nil {
+		return x.ChargeType
+	}
+	return ""
+}
+
+func (x *CreateFeeProfileRequest) GetMinimumFee() string {
+	if x != nil {
+		return x.MinimumFee
+	}
+	return ""
+}
+
 type FeeProfile struct {
 	state                  protoimpl.MessageState `protogen:"open.v1"`
 	Name                   string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -182,7 +198,6 @@ type FeeProfile struct {
 	PaymentChannelName     string                 `protobuf:"bytes,18,opt,name=payment_channel_name,json=paymentChannelName,proto3" json:"payment_channel_name,omitempty"`
 	TransactionTypeName    string                 `protobuf:"bytes,19,opt,name=transaction_type_name,json=transactionTypeName,proto3" json:"transaction_type_name,omitempty"`
 	SubTransactionTypeName string                 `protobuf:"bytes,20,opt,name=sub_transaction_type_name,json=subTransactionTypeName,proto3" json:"sub_transaction_type_name,omitempty"`
-	MerchantName           string                 `protobuf:"bytes,21,opt,name=merchant_name,json=merchantName,proto3" json:"merchant_name,omitempty"`
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -346,13 +361,6 @@ func (x *FeeProfile) GetTransactionTypeName() string {
 func (x *FeeProfile) GetSubTransactionTypeName() string {
 	if x != nil {
 		return x.SubTransactionTypeName
-	}
-	return ""
-}
-
-func (x *FeeProfile) GetMerchantName() string {
-	if x != nil {
-		return x.MerchantName
 	}
 	return ""
 }
@@ -637,7 +645,7 @@ var File_fee_profiles_proto protoreflect.FileDescriptor
 
 const file_fee_profiles_proto_rawDesc = "" +
 	"\n" +
-	"\x12fee-profiles.proto\x12\x12fee_profiles_proto\"\xf3\x03\n" +
+	"\x12fee-profiles.proto\x12\x12fee_profiles_proto\"\xb5\x04\n" +
 	"\x17CreateFeeProfileRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04code\x18\x02 \x01(\tR\x04code\x12,\n" +
@@ -655,7 +663,11 @@ const file_fee_profiles_proto_rawDesc = "" +
 	"\vrejected_by\x18\v \x01(\tR\n" +
 	"rejectedBy\x12'\n" +
 	"\x0frejected_reason\x18\r \x01(\tR\x0erejectedReason\x12)\n" +
-	"\x10calculation_mode\x18\x0e \x01(\tR\x0fcalculationMode\"\xfa\x05\n" +
+	"\x10calculation_mode\x18\x0e \x01(\tR\x0fcalculationMode\x12\x1f\n" +
+	"\vcharge_type\x18\x0f \x01(\tR\n" +
+	"chargeType\x12\x1f\n" +
+	"\vminimum_fee\x18\x10 \x01(\tR\n" +
+	"minimumFee\"\xd5\x05\n" +
 	"\n" +
 	"FeeProfile\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
@@ -682,8 +694,7 @@ const file_fee_profiles_proto_rawDesc = "" +
 	"updated_at\x18\x11 \x01(\tR\tupdatedAt\x120\n" +
 	"\x14payment_channel_name\x18\x12 \x01(\tR\x12paymentChannelName\x122\n" +
 	"\x15transaction_type_name\x18\x13 \x01(\tR\x13transactionTypeName\x129\n" +
-	"\x19sub_transaction_type_name\x18\x14 \x01(\tR\x16subTransactionTypeName\x12#\n" +
-	"\rmerchant_name\x18\x15 \x01(\tR\fmerchantName\"i\n" +
+	"\x19sub_transaction_type_name\x18\x14 \x01(\tR\x16subTransactionTypeName\"i\n" +
 	"\x15GetFeeProfilesRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1a\n" +
 	"\bpageSize\x18\x02 \x01(\x05R\bpageSize\x12 \n" +

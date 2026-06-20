@@ -3,6 +3,7 @@ package paymentchannels
 import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/common"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentservices"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/providers"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/transactiontypes"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -13,7 +14,9 @@ type PaymentChannel struct {
 	Name                 string                              `gorm:"type:varchar(255);not null"`
 	Code                 string                              `gorm:"type:varchar(255);not null"`
 	Logo                 string                              `gorm:"type:varchar(255);default:null"`
-	Status               string                              `gorm:"type:varchar(255);not null"`
+	Status               string                              `gorm:"type:varchar(255);default:inactive"`
+	ProviderID           uuid.UUID                           `gorm:"type:uuid;not null"`
+	Provider             providers.Provider                  `gorm:"foreignKey:ProviderID"`
 	PaymentServiceID     uuid.UUID                           `gorm:"type:uuid;not null"`
 	PaymentService       paymentservices.PaymentService      `gorm:"foreignKey:PaymentServiceID"`
 	TransactionTypeID    uuid.UUID                           `gorm:"type:uuid;not null"`
@@ -33,7 +36,8 @@ type ChannelFeeBands struct {
 	MinAmount        float64        `gorm:"type:decimal(10,2);not null"`
 	MaxAmount        float64        `gorm:"type:decimal(10,2);not null"`
 	ChargeAmount     float64        `gorm:"type:decimal(10,2);not null"`
-	Status           string         `gorm:"type:varchar(255);not null"`
+	ChargeType       string         `gorm:"type:varchar(255);default:percentage"`
+	Status           string         `gorm:"type:varchar(255);default:inactive"`
 	common.Entity
 }
 
