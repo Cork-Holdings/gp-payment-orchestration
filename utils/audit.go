@@ -76,6 +76,11 @@ func LogAuditEvent(app *global.App, serviceName string, eventName string, payloa
 		Timestamp: time.Now(),
 	}
 
+	if app.Mongo == nil {
+		log.Printf("[AuditLog] MongoDB not initialized. Event: %s, Service: %s, Payload: %s", eventName, serviceName, maskedPayload)
+		return
+	}
+
 	_, err := repo.MongoCreateOne(app, logEntry)
 	if err != nil {
 		log.Printf("[AuditLog] Failed to write audit log to MongoDB: %v", err)

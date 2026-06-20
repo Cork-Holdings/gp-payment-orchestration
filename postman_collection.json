@@ -629,12 +629,145 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Merchant API",
+			"item": [
+				{
+					"name": "Generate Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "client_id",
+									"value": "client_3d15c820",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "secret_3d15c820",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/oauth/token",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"oauth",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mobile Money Collect",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Client-ID",
+								"value": "client_3d15c820",
+								"type": "text"
+							},
+							{
+								"key": "X-Transaction-Ref",
+								"value": "REF-123456",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"260961234567\",\n    \"amount\": 100.50\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/mobile-money/collect",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"mobile-money",
+								"collect"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mobile Money Disburse",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Client-ID",
+								"value": "client_3d15c820",
+								"type": "text"
+							},
+							{
+								"key": "X-Auth-Signature",
+								"value": "{{signature}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Transaction-Ref",
+								"value": "DISB-789012",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"260961234567\",\n    \"amount\": 50.00\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/mobile-money/disburse",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"mobile-money",
+								"disburse"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:8080",
+			"value": "http://localhost:2050",
 			"type": "string"
 		}
 	]

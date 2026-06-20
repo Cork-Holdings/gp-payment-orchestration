@@ -6,7 +6,9 @@ import (
 
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/feeprofiles"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantapikeys"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantfeeprofiles"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantips"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantpaymentchannels"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentchannels"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentservices"
@@ -29,6 +31,8 @@ func Seed(db *gorm.DB) error {
 	}
 
 	// Clear existing data
+	db.Exec("DELETE FROM merchant_api_keys")
+	db.Exec("DELETE FROM merchant_ips")
 	db.Exec("DELETE FROM merchant_subscriptions")
 	db.Exec("DELETE FROM subscriptions")
 	db.Exec("DELETE FROM prefix_payment_channels")
@@ -66,16 +70,16 @@ func Seed(db *gorm.DB) error {
 	// 3. Transaction Types
 	ttCollection := transactiontypes.TransactionType{
 		ID:        uuid.New(),
-		Name:      "Collection",
-		Code:      "COLLECTION",
+		Name:      "MNO Collection",
+		Code:      "MNO_COLLECTION",
 		MaxAmount: "1000000",
 		MinAmount: "0.01",
 		Status:    "active",
 	}
 	ttDisbursement := transactiontypes.TransactionType{
 		ID:        uuid.New(),
-		Name:      "Disbursement",
-		Code:      "DISBURSEMENT",
+		Name:      "MNO Disbursement",
+		Code:      "MNO_DISBURSEMENT",
 		MaxAmount: "1000000",
 		MinAmount: "0.01",
 		Status:    "active",
@@ -189,7 +193,8 @@ func Seed(db *gorm.DB) error {
 			// Create a fee profile for each merchant for each channel
 			// Use different profile types for different merchants to test variety
 			var fp feeprofiles.FeeProfile
-			if mID == merchantID2 {
+			switch mID {
+			case merchantID2:
 				// Merchant 2: Tiered/Band for all collection channels
 				if c.TransactionTypeID == ttCollection.ID {
 					fp = feeprofiles.FeeProfile{
@@ -222,7 +227,7 @@ func Seed(db *gorm.DB) error {
 					}
 					db.Create(&fp)
 				}
-			} else if mID == merchantID3 {
+			case merchantID3:
 				// Merchant 3: Percentage for all collection channels
 				chargeAmount := 3.5 // 3.5%
 				if c.TransactionTypeID == ttDisbursement.ID {
@@ -242,7 +247,7 @@ func Seed(db *gorm.DB) error {
 					CalculationMode:   "standard",
 				}
 				db.Create(&fp)
-			} else {
+			default:
 				// Other merchants: Fixed
 				chargeAmount := 20.0
 				if c.TransactionTypeID == ttDisbursement.ID {
@@ -269,6 +274,33 @@ func Seed(db *gorm.DB) error {
 			db.Create(&merchantfeeprofiles.MerchantFeeProfile{ID: uuid.New(), MerchantID: mID, FeeProfileID: fp.ID, Status: "active"})
 		}
 		db.Create(&subscriptions.MerchantSubscription{ID: uuid.New(), MerchantID: mID, SubscriptionID: subMM.ID, Status: "active"})
+
+		// 9. Seed API Keys and IPs for each merchant
+		clientID := "client_" + mID.String()[:8]
+		clientSecret := "secret_" + mID.String()[:8]
+		db.Create(&merchantapikeys.MerchantAPIKey{
+			ID:           uuid.New(),
+			MerchantID:   mID,
+			ClientID:     clientID,
+			ClientSecret: clientSecret,
+			Status:       "active",
+		})
+
+		db.Create(&merchantips.MerchantIP{
+			ID:          uuid.New(),
+			MerchantID:  mID,
+			IPAddress:   "127.0.0.1",
+			Status:      "approved",
+			SubmittedBy: mID,
+		})
+		// Also add IPv6 localhost for local testing
+		db.Create(&merchantips.MerchantIP{
+			ID:          uuid.New(),
+			MerchantID:  mID,
+			IPAddress:   "::1",
+			Status:      "approved",
+			SubmittedBy: mID,
+		})
 	}
 
 	log.Printf("\n--- SEED DATA FOR SIMULATION ---\n")

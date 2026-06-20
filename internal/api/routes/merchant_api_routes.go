@@ -2,7 +2,6 @@ package routes
 
 import (
 	"context"
-	"encoding/json"
 
 	merchantapihandlers "github.com/Cork-Holdings/gp_payment_orchestration/internal/api/handlers/merchant_api_handlers"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantapis"
@@ -17,7 +16,7 @@ func RegisterMerchantRoutes(e *gin.Engine, app *global.App) {
 	e.POST("/oauth/token", middleware.IPRateLimiter(app), merchantapihandlers.HandleGenerateTokenHandler)
 
 	// 2. Protected Merchant Endpoints
-	verifyClient := &rabbitmqVerifyClient{app: app}
+	verifyClient := &directVerifyClient{app: app}
 
 	protected := e.Group("/api/v1")
 	protected.Use(middleware.IPRateLimiter(app), middleware.AuthMiddleware(app, verifyClient), middleware.TenantRateLimiter(app))
@@ -31,18 +30,13 @@ func RegisterMerchantRoutes(e *gin.Engine, app *global.App) {
 	}
 }
 
-type rabbitmqVerifyClient struct {
+// directVerifyClient verifies tokens directly without going through RabbitMQ
+type directVerifyClient struct {
 	app *global.App
 }
 
-func (v *rabbitmqVerifyClient) VerifyTokenAndIP(ctx context.Context, req *merchantapis.VerifyRequest) (*merchantapis.VerifyResponse, error) {
-	respBytes, err := v.app.MQ.Request("auth.verify_token_ip", req)
-	if err != nil {
-		return nil, err
-	}
-	var resp merchantapis.VerifyResponse
-	if err := json.Unmarshal(respBytes, &resp); err != nil {
-		return nil, err
-	}
-	return &resp, nil
+func (v *directVerifyClient) VerifyTokenAndIP(ctx context.Context, req *merchantapis.VerifyRequest) (*merchantapis.VerifyResponse, error) {
+	// Direct call to the verification function - no RabbitMQ needed
+	result := merchantapis.VerifyTokenAndIPDirect(v.app, req)
+	return result, nil
 }

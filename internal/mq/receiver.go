@@ -39,7 +39,7 @@ func Reciever(app *global.App, msg amqp091.Delivery) error {
 		if err := json.Unmarshal(msg.Body, &req); err != nil {
 			return err
 		}
-		err := merchantapis.HandleCollect(app, &req)
+		_, err := merchantapis.HandleCollect(app, &req)
 		if err != nil {
 			log.Printf("[MQ] Failed to process collection: %v", err)
 			return err

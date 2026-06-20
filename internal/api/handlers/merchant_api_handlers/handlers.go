@@ -11,20 +11,18 @@ import (
 )
 
 func HandleGenerateTokenHandler(c *gin.Context) {
-	clientID := c.PostForm("client_id")
-	clientSecret := c.PostForm("client_secret")
+	var req merchantapis.TokenRequest
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request: " + err.Error()})
+		return
+	}
 
-	if clientID == "" || clientSecret == "" {
+	if req.ClientID == "" || req.ClientSecret == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing client_id or client_secret"})
 		return
 	}
 
 	app := global.New()
-
-	req := merchantapis.TokenRequest{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-	}
 
 	resp, err := merchantapis.HandleGenerateToken(app, req)
 	if err != nil {
@@ -66,22 +64,20 @@ func HandleCollectionHandler(c *gin.Context) {
 
 	clientID := c.GetString("client_id")
 
-	// // Calculate MNO fees
-	// fee := merchantapis.CalculateMNOfees(req.PhoneNumber, req.Amount)
-
 	collectReq := &merchantapis.CollectRequest{
 		ClientID:       clientID,
 		PhoneNumber:    req.PhoneNumber,
-		Amount:         req.Amount, // Include fee in the collection amount
+		Amount:         req.Amount,
 		TransactionRef: transactionRef,
 	}
-	err := merchantapis.HandleCollect(global.New(), collectReq)
+
+	resp, err := merchantapis.HandleCollect(global.New(), collectReq)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Collection initiated successfully"})
+	c.JSON(resp.Code, resp)
 }
 
 // B. Mobile Money Disbursements (Synchronous, X-Auth-Signature validated)

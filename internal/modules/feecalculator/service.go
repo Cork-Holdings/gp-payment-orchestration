@@ -43,6 +43,10 @@ func calculateTransactionFeeByChargeType(
 	switch chargeType {
 	case "fixed":
 		result.FeeAmount = math.Round(feeProfile.ChargeAmount*100) / 100
+		// Apply minimum fee if configured and the fixed charge is below it
+		if feeProfile.MinimumFee > 0 {
+			result.FeeAmount = math.Max(result.FeeAmount, math.Round(feeProfile.MinimumFee*100)/100)
+		}
 		result.BandType = "fixed"
 		result.BandRate = feeProfile.ChargeAmount
 
@@ -89,6 +93,11 @@ func calculateTransactionFeeByChargeType(
 			result.FeeAmount = math.Round(selectedBand.ChargeAmount*100) / 100
 		} else {
 			result.FeeAmount = math.Round(amount*(selectedBand.ChargeAmount/100)*100) / 100
+		}
+
+		// Apply minimum fee if configured on the fee profile
+		if feeProfile.MinimumFee > 0 {
+			result.FeeAmount = math.Max(result.FeeAmount, math.Round(feeProfile.MinimumFee*100)/100)
 		}
 
 		result.BandID = selectedBand.ID.String()

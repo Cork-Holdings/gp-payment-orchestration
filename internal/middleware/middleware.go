@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -20,6 +21,16 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		clientID := c.GetHeader("X-Client-ID")
+
+		if authHeader == "" || clientID == "" {
+			// Try to get client_id from query or body as fallback for debugging
+			if clientID == "" {
+				clientID = c.Query("client_id")
+			}
+			if clientID == "" {
+				clientID = c.PostForm("client_id")
+			}
+		}
 
 		if authHeader == "" || clientID == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing Authorization or X-Client-ID header"})
@@ -53,12 +64,14 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 		})
 
 		if err != nil {
+			fmt.Printf("[Middleware] Auth error: %v\n", err)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "auth service validation failed: " + err.Error()})
 			c.Abort()
 			return
 		}
 
 		if !res.Valid {
+			fmt.Printf("[Middleware] Auth failed: %s (ClientID: %s, IP: %s)\n", res.ErrorMessage, clientID, clientIP)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": res.ErrorMessage})
 			c.Abort()
 			return
@@ -66,6 +79,7 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 
 		c.Set("client_id", clientID)
 		c.Set("tenant_id", res.TenantID)
+		c.Set("merchant_id", res.MerchantID)
 		c.Next()
 	}
 }
