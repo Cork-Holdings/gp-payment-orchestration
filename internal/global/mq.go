@@ -42,6 +42,9 @@ func GetMQ() *rmq {
 		ch.ExchangeDeclare(os.Getenv("EXCHANGE"), "topic", true, false, false, false, nil)
 		q, _ := ch.QueueDeclare(os.Getenv("QUEUE_NAME"), true, false, false, false, nil)
 		ch.QueueBind(q.Name, "gateway.*", os.Getenv("EXCHANGE"), false, nil)
+		ch.QueueBind(q.Name, "auth.*", os.Getenv("EXCHANGE"), false, nil)
+		ch.QueueBind(q.Name, "collection.*", os.Getenv("EXCHANGE"), false, nil)
+		ch.QueueBind(q.Name, "disbursement.*", os.Getenv("EXCHANGE"), false, nil)
 
 		mq.Channel = ch
 	}
