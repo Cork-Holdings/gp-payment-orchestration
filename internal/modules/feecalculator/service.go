@@ -101,7 +101,11 @@ func calculateTransactionFeeByChargeType(
 		}
 
 		result.BandID = selectedBand.ID.String()
-		result.BandRange = fmt.Sprintf("%.2f - %.2f", selectedBand.MinAmount, selectedBand.MaxAmount)
+		maxAmountStr := "∞"
+		if selectedBand.MaxAmount > 0 {
+			maxAmountStr = fmt.Sprintf("%.2f", selectedBand.MaxAmount)
+		}
+		result.BandRange = fmt.Sprintf("%.2f - %s", selectedBand.MinAmount, maxAmountStr)
 		result.BandType = selectedBand.ChargeType
 		result.BandRate = selectedBand.ChargeAmount
 
@@ -257,7 +261,11 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 		}
 
 		result.ProviderFeeBandID = selectedBand.ID.String()
-		result.ProviderFeeBandRange = fmt.Sprintf("%f - %f", selectedBand.MinAmount, selectedBand.MaxAmount)
+		maxAmountStr := "∞"
+		if selectedBand.MaxAmount > 0 {
+			maxAmountStr = fmt.Sprintf("%.2f", selectedBand.MaxAmount)
+		}
+		result.ProviderFeeBandRange = fmt.Sprintf("%.2f - %s", selectedBand.MinAmount, maxAmountStr)
 		result.ProviderFeeBandType = selectedBand.ChargeType
 		result.ProviderFeeBandRate = selectedBand.ChargeAmount
 	} else {
@@ -270,6 +278,8 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 	}
 
 	// 7. Handle disburse logic
+	// Disbursement: fee is added on top of amount (merchant pays amount + fee)
+	// Commission = transaction fee - provider fee
 	if transactionTypeCode == TransactionTypeDisbursement {
 		feeResult, err := calculateTransactionFeeByChargeType(ctx, cache, feeProfile, amount)
 		if err != nil {
@@ -306,6 +316,9 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 			result.ProfileFeeBandRate = feeResult.BandRate
 		}
 
+		log.Printf("[FeeCalculator] Disbursement - Amount: %.2f, TransactionFee: %.2f, ProviderFee: %.2f, GrossAmount: %.2f, Commission: %.2f, NetAmount: %.2f",
+			amount, transactionFeeAmount, providerFeeAmount, grossAmount, commissionFeeAmount, netAmount)
+
 		return &result, nil
 	}
 
@@ -316,6 +329,8 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 	}
 
 	if isMergedMode {
+		// Merged mode: merchant fee + provider fee = total fee charged to merchant
+		// Commission = merchant fee (platform keeps this, provider fee goes to MNO)
 		merchantFeeAmount := feeResult.FeeAmount
 
 		totalFeeAmount := math.Round((merchantFeeAmount+providerFeeAmount)*100) / 100
@@ -325,6 +340,7 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 
 		result.TransactionFeePercent = transactionFeePercent
 		result.TransactionFeeAmount = totalFeeAmount
+		result.TotalFeeAmount = totalFeeAmount
 		result.ProviderFeeAmount = providerFeeAmount
 		result.CommissionFeePercent = commissionFeePercent
 		result.CommissionFeeAmount = commissionFeeAmount
@@ -341,8 +357,13 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 			result.ProfileFeeBandRate = feeResult.BandRate
 		}
 
+		log.Printf("[FeeCalculator] Merged mode - Amount: %.2f, MerchantFee: %.2f, ProviderFee: %.2f, TotalFee: %.2f, Commission: %.2f, NetAmount: %.2f",
+			amount, merchantFeeAmount, providerFeeAmount, totalFeeAmount, commissionFeeAmount, netAmount)
+
 		return &result, nil
 	} else {
+		// Standard mode: transaction fee is the total fee charged to merchant
+		// Commission = transaction fee - provider fee
 		transactionFeeAmount := feeResult.FeeAmount
 
 		commissionFeeAmount := math.Round((transactionFeeAmount-providerFeeAmount)*100) / 100
@@ -351,6 +372,7 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 
 		result.TransactionFeePercent = transactionFeePercent
 		result.TransactionFeeAmount = transactionFeeAmount
+		result.TotalFeeAmount = transactionFeeAmount
 		result.ProviderFeeAmount = providerFeeAmount
 		result.CommissionFeePercent = commissionFeePercent
 		result.CommissionFeeAmount = commissionFeeAmount
@@ -366,6 +388,9 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 			result.ProfileFeeBandType = feeResult.BandType
 			result.ProfileFeeBandRate = feeResult.BandRate
 		}
+
+		log.Printf("[FeeCalculator] Standard mode - Amount: %.2f, TransactionFee: %.2f, ProviderFee: %.2f, Commission: %.2f, NetAmount: %.2f",
+			amount, transactionFeeAmount, providerFeeAmount, commissionFeeAmount, netAmount)
 
 		return &result, nil
 	}

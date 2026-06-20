@@ -185,9 +185,17 @@ func HandleCollect(app *global.App, req *CollectRequest) (*CollectResponse, erro
 		return nil, fmt.Errorf("invalid phone number")
 	}
 
+	//Extract Merchant ID from Client ID
+	var mApiKey merchantapikeys.MerchantAPIKey
+	err := app.DB.Where("client_id = ?", req.ClientID).First(&mApiKey).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract merchant ID: %v", err)
+	}
+	merchantID := mApiKey.MerchantID.String()
+
 	// Calculate fees for this collection
 	feeResult, err := feecalculator.CalculateFees(
-		req.MerchantID,
+		merchantID,
 		req.PhoneNumber,
 		req.Amount,
 		feecalculator.TransactionTypeCollection,
@@ -213,7 +221,7 @@ func HandleCollect(app *global.App, req *CollectRequest) (*CollectResponse, erro
 	// Build payload for transactions service
 	transactionPayload := map[string]interface{}{
 		"client_id":              req.ClientID,
-		"merchant_id":            req.MerchantID,
+		"merchant_id":            merchantID,
 		"phone_number":           req.PhoneNumber,
 		"amount":                 req.Amount,
 		"transaction_ref":        req.TransactionRef,
@@ -233,10 +241,10 @@ func HandleCollect(app *global.App, req *CollectRequest) (*CollectResponse, erro
 	log.Printf("[HandleCollect] Simulating send to transactions service queue: %s", string(transactionPayloadJSON))
 
 	// Forward to transactions service via RabbitMQ
-	err = app.MQ.Emit("transactions.process", transactionPayload)
-	if err != nil {
-		return nil, fmt.Errorf("failed to forward collection to RabbitMQ: %v", err)
-	}
+	// err = app.MQ.Emit("transactions.process", transactionPayload)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to forward collection to RabbitMQ: %v", err)
+	// }
 
 	utils.LogAuditEvent(app, "merchant_service", "collection.forwarded", transactionPayload)
 

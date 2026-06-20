@@ -3,8 +3,8 @@ package feecalculator
 type TransactionTypeCode string
 
 const (
-	TransactionTypeCollection   TransactionTypeCode = "COLLECTION"
-	TransactionTypeDisbursement TransactionTypeCode = "DISBURSEMENT"
+	TransactionTypeCollection   TransactionTypeCode = "MNO_COLLECTION"
+	TransactionTypeDisbursement TransactionTypeCode = "MNO_DISBURSEMENT"
 )
 
 type FeeCalculationResult struct {
