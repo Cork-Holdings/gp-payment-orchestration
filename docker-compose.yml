@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    ports:
+      - "2050:2050"
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mariadb:11
+    environment:
+      MYSQL_DATABASE: hof
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mariadb_data:/var/lib/mysql   # fresh folder
+
+
+volumes:
+  mysql_data:
