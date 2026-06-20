@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package merchant_payment_channels_proto;
+
+
+option go_package = "/proto/merchant_payment_channels_proto;merchant_payment_channels_proto";
+
+
+message CreateMerchantPaymentChannelRequest {
+    string merchant_id = 1;
+    string status = 2;
+    string payment_channel_id = 3;
+    string rejection_reason = 5;
+    string assigned_by = 6;
+    string approved_by = 7;
+}
+
+message MerchantPaymentChannel {
+    string merchant_id = 1;
+    string status = 2;
+    string payment_channel_id = 3;
+    string rejection_reason = 4;
+    string assigned_by = 6;
+    string approved_by = 7;
+    string id = 8;
+    string created_at = 9;
+    string updated_at = 10;
+    string payment_channel_name = 12;
+    string merchant_name = 13;
+    string approval_status = 14;
+}
+
+
+message GetMerchantPaymentChannelsRequest {
+    int32 page =1;
+    int32 page_size =2;
+    string search_query =3;
+    string merchant_id = 4;
+    string payment_channel_id = 5;
+    string status = 6;
+    string rejection_reason = 7;
+    string assigned_by = 8;
+    string approved_by = 9;
+}
+
+message GetMerchantPaymentChannelsResponse {
+    repeated MerchantPaymentChannel merchant_payment_channels = 1;       // List of merchant payment channels
+    int32 total_pages = 2;         // Total number of pages
+    int32 current_page = 3;        // Current page
+    bool has_more = 4;             // Whether there are more pages
+  }
+
+message EditMerchantPaymentChannelRequest {
+    string merchant_id = 1;
+    string status = 2;
+    string payment_channel_id = 3;
+    string approval_status = 4;
+    string rejection_reason = 5;
+    string assigned_by = 6;
+    string approved_by = 7;
+    string id = 9;
+}
