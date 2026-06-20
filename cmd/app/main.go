@@ -6,7 +6,9 @@ import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/cmd"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/feeprofiles"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantapikeys"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantfeeprofiles"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantips"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentchannels"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentservices"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/prefixes"
@@ -37,6 +39,8 @@ func main() {
 		&prefixes.PrefixPaymentChannel{},
 		&subscriptions.Subscription{},
 		&subscriptions.MerchantSubscription{},
+		&merchantapikeys.MerchantAPIKey{},
+		&merchantips.MerchantIP{},
 	)
 
 	cmd.Execute()

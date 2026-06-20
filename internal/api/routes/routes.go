@@ -117,4 +117,22 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 		merchantPaymentChannelsRoutes.PUT("/update", handlers.UpdateMerchantPaymentChannelHandler)
 		merchantPaymentChannelsRoutes.DELETE("/delete/:id", handlers.DeleteMerchantPaymentChannelHandler)
 	}
+
+	merchantApiKeyRoutes := e.Group("/merchant-api-keys")
+	{
+		// merchantApiKeyRoutes.POST("/create", handlers.CreateMerchantAPIKeyHandler)
+		merchantApiKeyRoutes.GET("/list", handlers.GetMerchantAPIKeysHandler)
+		merchantApiKeyRoutes.PUT("/update", handlers.UpdateMerchantAPIKeyHandler)
+		merchantApiKeyRoutes.DELETE("/delete/:id", handlers.DeleteMerchantAPIKeyHandler)
+		merchantApiKeyRoutes.POST("/generate-auth-signature", handlers.GenerateAuthSignatureHandler)
+	}
+
+	merchantIpRoutes := e.Group("/merchant-ips")
+	{
+		merchantIpRoutes.POST("/add", handlers.AddMerchantIPHandler)
+		merchantIpRoutes.GET("/list", handlers.GetMerchantIPsHandler)
+		merchantIpRoutes.GET("/get/:id", handlers.GetMerchantIPHandler)
+		merchantIpRoutes.PUT("/update", handlers.UpdateMerchantIPHandler)
+		merchantIpRoutes.DELETE("/delete/:id", handlers.DeleteMerchantIPHandler)
+	}
 }
