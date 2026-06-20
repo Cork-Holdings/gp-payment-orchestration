@@ -44,6 +44,8 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 			clientIP = strings.TrimSpace(ips[0])
 		}
 
+		//test webhook
+
 		res, err := verifier.VerifyTokenAndIP(c.Request.Context(), &merchantapis.VerifyRequest{
 			Token:     token,
 			ClientID:  clientID,
