@@ -1,25 +1,29 @@
 version: "3.9"
 
 services:
-  api:
-    build: .
-    ports:
-      - "2050:2050"
-    env_file:
-      - .env
-    depends_on:
-      - mysql
-
-  mysql:
-    image: mariadb:11
+  postgres:
+    image: postgres:15-alpine
     environment:
-      MYSQL_DATABASE: hof
-      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: gp_payment_orchestration
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - ./mariadb_data:/var/lib/mysql   # fresh folder
+      - postgres_data:/var/lib/postgresql/data
 
+  mongodb:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
 
 volumes:
-  mysql_data:
+  postgres_data:
+  mongodb_data:

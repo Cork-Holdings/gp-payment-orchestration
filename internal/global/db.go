@@ -2,6 +2,7 @@ package global
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"sync"
 
@@ -31,7 +32,7 @@ func GetDB() *gorm.DB {
 				Logger: logger.Default.LogMode(logger.Warn),
 			})
 			if err != nil {
-				panic(err)
+				log.Fatalf("Failed to connect to PostgreSQL: %v", err)
 			}
 		})
 	}

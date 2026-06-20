@@ -40,14 +40,14 @@ var o sync.Once
 func New() *App {
 	o.Do(func() {
 		a = &App{
-			DB:          GetDB(),
-			Mongo:       GetMongo(),
-			MongoDBName: GetMongoDBName(),
-			Validator:   GetValidator(),
-			TaskQ:       GetTaskQueue(),
-			Cache:       GetCache(),
-			IO:          GetSocketIO(),
-			MQ:          GetMQ(),
+			DB: GetDB(),
+			// Mongo:       GetMongo(),
+			// MongoDBName: GetMongoDBName(),
+			Validator: GetValidator(),
+			// TaskQ:       GetTaskQueue(),
+			Cache: GetCache(),
+			IO:    GetSocketIO(),
+			MQ:    GetMQ(),
 		}
 	})
 	return a

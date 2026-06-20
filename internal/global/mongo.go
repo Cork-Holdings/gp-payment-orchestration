@@ -2,6 +2,7 @@ package global
 
 import (
 	"context"
+	"log"
 	"os"
 	"sync"
 	"time"
@@ -28,11 +29,11 @@ func GetMongo() *mongo.Client {
 
 			client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 			if err != nil {
-				panic(err)
+				log.Fatalf("Failed to connect to MongoDB at %s: %v", uri, err)
 			}
 
 			if err := client.Ping(ctx, nil); err != nil {
-				panic(err)
+				log.Fatalf("Failed to ping MongoDB at %s: %v. Ensure MongoDB is running.", uri, err)
 			}
 
 			mongoClient = client
