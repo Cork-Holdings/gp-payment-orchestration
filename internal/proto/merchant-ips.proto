@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package merchant_ips;
+
+
+option go_package = "/proto/merchant_ips_proto;merchant_ips_proto";
+
+
+message CreateMerchantIPRequest {
+    string merchant_id = 1;
+    string ip_address = 2;
+    string status = 3;
+    string submitted_by = 4;
+}
+
+message MerchantIP {
+    string merchant_id = 1;
+    string ip_address = 2;
+    string status = 3;
+    string submitted_by = 4;
+    string approved_by = 5;
+    string approved_at = 6;
+    string rejected_by = 7;
+    string rejected_at = 8;
+    string rejected_reason = 9;
+    string id = 10;
+    string created_at = 11;
+    string updated_at = 12;
+}
+
+
+message GetMerchantIPsRequest {
+    int32 page =1;
+    int32 page_size =2;
+    string search_query =3;
+    string merchant_id = 4;
+}
+
+message GetMerchantIPsResponse {
+    repeated MerchantIP merchant_ips = 1;       // List of merchant IPs
+    int32 total_pages = 2;         // Total number of pages
+    int32 current_page = 3;        // Current page
+    bool has_more = 4;             // Whether there are more pages
+  }
+
+message EditMerchantIPRequest {
+    string ip_address = 1;
+    string status = 2;
+    string approved_by = 3;
+    string approved_at = 4;
+    string rejected_by = 5;
+    string rejected_at = 6;
+    string rejected_reason = 7;
+    string id = 8;
+}

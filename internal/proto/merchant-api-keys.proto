@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package merchant_api_keys_proto;
+
+
+option go_package = "/proto/merchant_api_keys_proto;merchant_api_keys_proto";
+
+
+// message CreateMerchantIPRequest {
+//     string merchant_id = 1;
+//     string ip_address = 2;
+//     string status = 3;
+//     string submitted_by = 4;
+// }
+
+message MerchantAPIKey {
+    string merchant_id = 1;
+    string client_id = 2;
+    string client_secret = 3;
+    string pin = 4;
+    string auth_signature = 5;
+    string status = 6;
+    string id = 7;
+    string created_at = 8;
+    string updated_at = 9;
+}
+
+
+message GetMerchantAPIKeysRequest {
+    int32 page =1;
+    int32 page_size =2;
+    string search_query =3;
+    string merchant_id = 4;
+}
+
+message GetMerchantAPIKeysResponse {
+    repeated MerchantAPIKey merchant_api_keys = 1;       // List of merchant API keys
+    int32 total_pages = 2;         // Total number of pages
+    int32 current_page = 3;        // Current page
+    bool has_more = 4;             // Whether there are more pages
+  }
+
+message EditMerchantAPIKeyRequest {
+    string client_id = 1;
+    string client_secret = 2;
+    string pin = 3;
+    string auth_signature = 4;
+    string status = 5;
+    string id = 6;
+}
+
+
+message GenerateAuthSignatureRequest {
+    string merchant_id = 1;
+    string client_id = 2;
+    string client_secret = 3;
+    string pin = 4;
+}
