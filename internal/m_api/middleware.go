@@ -34,14 +34,7 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 		}
 		token := parts[1]
 
-		// Extract IP from X-Forwarded-For if behind a proxy, fallback to client IP
-		clientIP := c.GetHeader("X-Forwarded-For")
-		if clientIP == "" {
-			clientIP = c.ClientIP()
-		} else {
-			ips := strings.Split(clientIP, ",")
-			clientIP = strings.TrimSpace(ips[0])
-		}
+		clientIP := ClientIP(c)
 
 		res, err := verifier.VerifyTokenAndIP(c.Request.Context(), &VerifyRequest{
 			Token:     token,
@@ -50,7 +43,7 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 		})
 
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "auth service validation failed: " + err.Error()})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication validation failed"})
 			c.Abort()
 			return
 		}
@@ -71,22 +64,26 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 func IPRateLimiter(app *global.App) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if app.Cache == nil {
-			c.Next()
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "rate limiting unavailable"})
+			c.Abort()
 			return
 		}
-		ip := c.ClientIP()
+		ip := ClientIP(c)
 		ipKey := "rate:ip:" + ip
 
 		val, err := app.Cache.Incr(c.Request.Context(), ipKey).Result()
-		if err == nil {
-			if val == 1 {
-				app.Cache.Expire(c.Request.Context(), ipKey, time.Minute)
-			}
-			if val > 100 {
-				c.JSON(http.StatusTooManyRequests, gin.H{"error": "IP rate limit exceeded"})
-				c.Abort()
-				return
-			}
+		if err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "rate limiting unavailable"})
+			c.Abort()
+			return
+		}
+		if val == 1 {
+			app.Cache.Expire(c.Request.Context(), ipKey, time.Minute)
+		}
+		if val > 100 {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": "IP rate limit exceeded"})
+			c.Abort()
+			return
 		}
 		c.Next()
 	}
@@ -96,7 +93,8 @@ func IPRateLimiter(app *global.App) gin.HandlerFunc {
 func TenantRateLimiter(app *global.App) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if app.Cache == nil {
-			c.Next()
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "rate limiting unavailable"})
+			c.Abort()
 			return
 		}
 		clientID := c.GetString("client_id")
@@ -107,15 +105,18 @@ func TenantRateLimiter(app *global.App) gin.HandlerFunc {
 
 		tenantKey := "rate:tenant:" + clientID
 		val, err := app.Cache.Incr(c.Request.Context(), tenantKey).Result()
-		if err == nil {
-			if val == 1 {
-				app.Cache.Expire(c.Request.Context(), tenantKey, time.Minute)
-			}
-			if val > 200 {
-				c.JSON(http.StatusTooManyRequests, gin.H{"error": "Merchant rate limit exceeded"})
-				c.Abort()
-				return
-			}
+		if err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "rate limiting unavailable"})
+			c.Abort()
+			return
+		}
+		if val == 1 {
+			app.Cache.Expire(c.Request.Context(), tenantKey, time.Minute)
+		}
+		if val > 200 {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Merchant rate limit exceeded"})
+			c.Abort()
+			return
 		}
 		c.Next()
 	}

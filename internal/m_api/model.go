@@ -1,6 +1,8 @@
 package m_api
 
 import (
+	"log"
+	"os"
 	"time"
 
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/common"
@@ -38,12 +40,18 @@ func (m *MerchantProfile) AutoMigrate(db *gorm.DB) error {
 
 	var count int64
 	db.Model(&MerchantProfile{}).Count(&count)
-	if count == 0 {
+	if count == 0 && os.Getenv("SEED_DEFAULT_MERCHANT") == "true" {
+		plainSecret := "secret_456"
+		protectedSecret, err := protectSecret(plainSecret)
+		if err != nil {
+			return err
+		}
+
 		now := time.Now()
 		defaultMerchant := &MerchantProfile{
 			ID:             uuid.New(),
 			ClientID:       "merchant_123",
-			ClientSecret:   "secret_456",
+			ClientSecret:   protectedSecret,
 			MerchantName:   "Test Merchant",
 			AllowedIPs:     "127.0.0.1,::1,10.0.0.0/8,192.168.1.0/24",
 			WalletBalance:  1000.0,
@@ -53,7 +61,10 @@ func (m *MerchantProfile) AutoMigrate(db *gorm.DB) error {
 				UpdatedAt: &now,
 			},
 		}
-		db.Create(defaultMerchant)
+		if err := db.Create(defaultMerchant).Error; err != nil {
+			return err
+		}
+		log.Println("Seeded default merchant (SEED_DEFAULT_MERCHANT=true)")
 	}
 	return nil
 }

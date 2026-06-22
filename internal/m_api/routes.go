@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
 	"github.com/gin-gonic/gin"
@@ -27,11 +28,12 @@ func RegisterMerchantRoutes(e *gin.Engine, app *global.App) {
 		reqPayload := map[string]string{
 			"client_id":     clientID,
 			"client_secret": clientSecret,
+			"ip_address":    ClientIP(c),
 		}
 
 		respBytes, err := app.MQ.Request("auth.generate_token", reqPayload)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "authentication request failed: " + err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "authentication request failed"})
 			return
 		}
 
@@ -42,6 +44,10 @@ func RegisterMerchantRoutes(e *gin.Engine, app *global.App) {
 		}
 
 		if errMsg, ok := resp["error"].(string); ok && errMsg != "" {
+			if errMsg == "IP address not whitelisted" {
+				c.JSON(http.StatusForbidden, gin.H{"error": errMsg})
+				return
+			}
 			c.JSON(http.StatusUnauthorized, gin.H{"error": errMsg})
 			return
 		}
@@ -88,7 +94,7 @@ func RegisterMerchantRoutes(e *gin.Engine, app *global.App) {
 
 			err := app.MQ.Emit("collection.collect", eventPayload)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to initiate collection: " + err.Error()})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to initiate collection"})
 				return
 			}
 
@@ -119,7 +125,20 @@ func RegisterMerchantRoutes(e *gin.Engine, app *global.App) {
 			}
 
 			if err := json.Unmarshal(rawBody, &req); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON body: " + err.Error()})
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON body"})
+				return
+			}
+
+			if req.Amount <= 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "amount must be greater than 0"})
+				return
+			}
+			if strings.TrimSpace(req.Currency) == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "currency is required"})
+				return
+			}
+			if !phoneValidationRegex.MatchString(req.PhoneNumber) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "phone_number must be exactly 12 digits long"})
 				return
 			}
 
@@ -138,7 +157,7 @@ func RegisterMerchantRoutes(e *gin.Engine, app *global.App) {
 
 			respBytes, err := app.MQ.Request("disbursement.disburse", reqPayload)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "disbursement request failed: " + err.Error()})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "disbursement request failed"})
 				return
 			}
 

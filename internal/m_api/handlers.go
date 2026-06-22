@@ -18,11 +18,10 @@ import (
 	"gorm.io/gorm"
 )
 
-var jwtSecret = []byte("merchant_secret_jwt_key_999")
-
 type TokenRequest struct {
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
+	IPAddress    string `json:"ip_address"`
 }
 
 type TokenResponse struct {
@@ -68,7 +67,7 @@ type DisburseResponse struct {
 	ErrorCode   string `json:"error_code,omitempty"`
 }
 
-// HandleGenerateToken validates credentials and generates a Bearer JWT token
+// HandleGenerateToken validates credentials, IP whitelist, and generates a Bearer JWT token
 func HandleGenerateToken(app *global.App, payload []byte) ([]byte, error) {
 	var req TokenRequest
 	if err := json.Unmarshal(payload, &req); err != nil {
@@ -78,12 +77,32 @@ func HandleGenerateToken(app *global.App, payload []byte) ([]byte, error) {
 	var mProfile MerchantProfile
 	err := app.DB.Where("client_id = ?", req.ClientID).First(&mProfile).Error
 	if err != nil {
+		LogAuditEvent(app, "auth_service", "token.denied", map[string]string{
+			"client_id": req.ClientID,
+			"reason":    "invalid_credentials",
+			"ip":        req.IPAddress,
+		})
 		resp, _ := json.Marshal(TokenResponse{Error: "invalid client_id or client_secret"})
 		return resp, nil
 	}
 
-	if mProfile.ClientSecret != req.ClientSecret {
+	if !verifyClientSecret(mProfile.ClientSecret, req.ClientSecret) {
+		LogAuditEvent(app, "auth_service", "token.denied", map[string]string{
+			"client_id": req.ClientID,
+			"reason":    "invalid_credentials",
+			"ip":        req.IPAddress,
+		})
 		resp, _ := json.Marshal(TokenResponse{Error: "invalid client_id or client_secret"})
+		return resp, nil
+	}
+
+	if req.IPAddress != "" && !isIPAllowed(req.IPAddress, mProfile.AllowedIPs) {
+		LogAuditEvent(app, "auth_service", "token.denied", map[string]string{
+			"client_id": req.ClientID,
+			"reason":    "ip_not_whitelisted",
+			"ip":        req.IPAddress,
+		})
+		resp, _ := json.Marshal(TokenResponse{Error: "IP address not whitelisted"})
 		return resp, nil
 	}
 
@@ -128,18 +147,33 @@ func HandleVerifyTokenAndIP(app *global.App, payload []byte) ([]byte, error) {
 	})
 
 	if err != nil || !token.Valid {
+		LogAuditEvent(app, "auth_service", "token.verify_failed", map[string]string{
+			"client_id": req.ClientID,
+			"reason":    "invalid_or_expired_token",
+			"ip":        req.IPAddress,
+		})
 		resp, _ := json.Marshal(VerifyResponse{Valid: false, ErrorMessage: "invalid or expired token"})
 		return resp, nil
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
+		LogAuditEvent(app, "auth_service", "token.verify_failed", map[string]string{
+			"client_id": req.ClientID,
+			"reason":    "invalid_claims",
+			"ip":        req.IPAddress,
+		})
 		resp, _ := json.Marshal(VerifyResponse{Valid: false, ErrorMessage: "invalid claims structure"})
 		return resp, nil
 	}
 
 	claimClientID, _ := claims["client_id"].(string)
 	if claimClientID != req.ClientID {
+		LogAuditEvent(app, "auth_service", "token.verify_failed", map[string]string{
+			"client_id": req.ClientID,
+			"reason":    "client_id_mismatch",
+			"ip":        req.IPAddress,
+		})
 		resp, _ := json.Marshal(VerifyResponse{Valid: false, ErrorMessage: "token does not match Client ID"})
 		return resp, nil
 	}
@@ -148,6 +182,11 @@ func HandleVerifyTokenAndIP(app *global.App, payload []byte) ([]byte, error) {
 	err = app.DB.Where("client_id = ?", claimClientID).First(&mProfile).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			LogAuditEvent(app, "auth_service", "token.verify_failed", map[string]string{
+				"client_id": req.ClientID,
+				"reason":    "merchant_not_found",
+				"ip":        req.IPAddress,
+			})
 			resp, _ := json.Marshal(VerifyResponse{Valid: false, ErrorMessage: "merchant profile not found"})
 			return resp, nil
 		}
@@ -155,6 +194,11 @@ func HandleVerifyTokenAndIP(app *global.App, payload []byte) ([]byte, error) {
 	}
 
 	if !isIPAllowed(req.IPAddress, mProfile.AllowedIPs) {
+		LogAuditEvent(app, "auth_service", "token.verify_failed", map[string]string{
+			"client_id": req.ClientID,
+			"reason":    "ip_not_whitelisted",
+			"ip":        req.IPAddress,
+		})
 		resp, _ := json.Marshal(VerifyResponse{Valid: false, ErrorMessage: "IP address not whitelisted"})
 		return resp, nil
 	}
@@ -227,9 +271,31 @@ func HandleDisburse(app *global.App, payload []byte) ([]byte, error) {
 	}
 
 	// Verify Auth Signature against request tampering
-	expectedSig := computeHMAC(req.RawBody, mProfile.ClientSecret)
-	if !strings.EqualFold(expectedSig, req.Signature) {
+	signingSecret, err := secretForHMAC(mProfile.ClientSecret)
+	if err != nil {
+		return nil, err
+	}
+	if !verifyHMAC(req.RawBody, signingSecret, req.Signature) {
+		LogAuditEvent(app, "merchant_service", "disbursement.denied", map[string]string{
+			"client_id": req.ClientID,
+			"reason":    "invalid_signature",
+		})
 		resp, _ := json.Marshal(DisburseResponse{Status: "FAILED", ErrorCode: "INVALID_SIGNATURE"})
+		return resp, nil
+	}
+
+	if req.Amount <= 0 {
+		resp, _ := json.Marshal(DisburseResponse{Status: "FAILED", ErrorCode: "INVALID_AMOUNT"})
+		return resp, nil
+	}
+
+	if strings.TrimSpace(req.Currency) == "" {
+		resp, _ := json.Marshal(DisburseResponse{Status: "FAILED", ErrorCode: "INVALID_CURRENCY"})
+		return resp, nil
+	}
+
+	if !phoneValidationRegex.MatchString(req.PhoneNumber) {
+		resp, _ := json.Marshal(DisburseResponse{Status: "FAILED", ErrorCode: "INVALID_PHONE_NUMBER"})
 		return resp, nil
 	}
 
