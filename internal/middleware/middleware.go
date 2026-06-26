@@ -88,22 +88,26 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 func IPRateLimiter(app *global.App) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if app.Cache == nil {
-			c.Next()
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "rate limiting unavailable"})
+			c.Abort()
 			return
 		}
 		ip := c.ClientIP()
 		ipKey := "rate:ip:" + ip
 
 		val, err := app.Cache.Incr(c.Request.Context(), ipKey).Result()
-		if err == nil {
-			if val == 1 {
-				app.Cache.Expire(c.Request.Context(), ipKey, time.Minute)
-			}
-			if val > 100 {
-				c.JSON(http.StatusTooManyRequests, gin.H{"error": "IP rate limit exceeded"})
-				c.Abort()
-				return
-			}
+		if err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "rate limiting unavailable"})
+			c.Abort()
+			return
+		}
+		if val == 1 {
+			app.Cache.Expire(c.Request.Context(), ipKey, time.Minute)
+		}
+		if val > 100 {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": "IP rate limit exceeded"})
+			c.Abort()
+			return
 		}
 		c.Next()
 	}
@@ -113,7 +117,8 @@ func IPRateLimiter(app *global.App) gin.HandlerFunc {
 func TenantRateLimiter(app *global.App) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if app.Cache == nil {
-			c.Next()
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "rate limiting unavailable"})
+			c.Abort()
 			return
 		}
 		clientID := c.GetString("client_id")
@@ -124,15 +129,18 @@ func TenantRateLimiter(app *global.App) gin.HandlerFunc {
 
 		tenantKey := "rate:tenant:" + clientID
 		val, err := app.Cache.Incr(c.Request.Context(), tenantKey).Result()
-		if err == nil {
-			if val == 1 {
-				app.Cache.Expire(c.Request.Context(), tenantKey, time.Minute)
-			}
-			if val > 200 {
-				c.JSON(http.StatusTooManyRequests, gin.H{"error": "Merchant rate limit exceeded"})
-				c.Abort()
-				return
-			}
+		if err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "rate limiting unavailable"})
+			c.Abort()
+			return
+		}
+		if val == 1 {
+			app.Cache.Expire(c.Request.Context(), tenantKey, time.Minute)
+		}
+		if val > 200 {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Merchant rate limit exceeded"})
+			c.Abort()
+			return
 		}
 		c.Next()
 	}
