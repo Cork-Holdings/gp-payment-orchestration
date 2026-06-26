@@ -15,7 +15,7 @@ func CreatePrefixHandler(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.RespondWithError(c, http.StatusBadRequest, err.Error())
 		return
-	}
+	} //
 
 	err := prefixes.CreatePrefix(&req)
 	if err != nil {
