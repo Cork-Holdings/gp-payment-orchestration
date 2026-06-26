@@ -35,7 +35,7 @@ func GetMongo() *mongo.Client {
 			if err := client.Ping(ctx, nil); err != nil {
 				log.Fatalf("Failed to ping MongoDB at %s: %v. Ensure MongoDB is running.", uri, err)
 			}
-
+			//test
 			mongoClient = client
 		})
 	}
