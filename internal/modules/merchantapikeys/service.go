@@ -7,10 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
 
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/common"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/proto/merchant_api_keys_proto"
+	"github.com/Cork-Holdings/gp_payment_orchestration/utils"
 	"github.com/google/uuid"
 )
 
@@ -189,8 +191,20 @@ func GenerateAuthSignature(req *merchant_api_keys_proto.GenerateAuthSignatureReq
 
 	//If Pin is not set update it with the pin from the request
 	if merchantAPIKeys[0].Pin == "" {
-		merchantAPIKeys[0].Pin = req.Pin
-		if err := global.GetDB().Model(&MerchantAPIKey{}).Where("id = ?", merchantAPIKeys[0].ID).Updates(map[string]interface{}{"pin": req.Pin}).Error; err != nil {
+
+		encryptionKey := []byte(os.Getenv("ENCRYPTION_KEY"))
+		if len(encryptionKey) == 0 {
+			return "", errors.New("ENCRYPTION_KEY not set")
+		}
+
+		// Encrypt the Pin
+		ePIN, err := utils.Encrypt(req.Pin, encryptionKey)
+		if err != nil {
+			return "", err
+		}
+
+		merchantAPIKeys[0].Pin = ePIN
+		if err := global.GetDB().Model(&MerchantAPIKey{}).Where("id = ?", merchantAPIKeys[0].ID).Updates(map[string]interface{}{"pin": ePIN}).Error; err != nil {
 			return "", err
 		}
 	}

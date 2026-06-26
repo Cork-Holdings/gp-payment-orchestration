@@ -19,6 +19,8 @@ var (
 type rmq struct {
 	Conn    *amqp.Connection
 	Channel *amqp.Channel
+
+	pending sync.Map
 }
 
 var mq *rmq
@@ -39,14 +41,39 @@ func GetMQ() *rmq {
 		if err != nil {
 			log.Fatalf("Failed to open a RabbitMQ channel: %s", err)
 		}
+		mq.Channel = ch
 		ch.ExchangeDeclare(os.Getenv("EXCHANGE"), "topic", true, false, false, false, nil)
 		q, _ := ch.QueueDeclare(os.Getenv("QUEUE_NAME"), true, false, false, false, nil)
 		ch.QueueBind(q.Name, "gateway.*", os.Getenv("EXCHANGE"), false, nil)
 		ch.QueueBind(q.Name, "auth.*", os.Getenv("EXCHANGE"), false, nil)
 		ch.QueueBind(q.Name, "collection.*", os.Getenv("EXCHANGE"), false, nil)
 		ch.QueueBind(q.Name, "disbursement.*", os.Getenv("EXCHANGE"), false, nil)
+		q, err = ch.QueueDeclare(
+			"rpc.responses",
+			true,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		mq.Channel = ch
+		ch.QueueBind(
+			q.Name,
+			"rpc.responses",
+			os.Getenv("EXCHANGE"),
+			false,
+			nil,
+		)
+		if err != nil {
+			log.Fatalf("failed to declare rpc.responses queue: %v", err)
+		}
+
+		if err := mq.StartResponseListener(q.Name); err != nil {
+			log.Fatalf("failed to start response listener: %v", err)
+		}
 	}
 	return mq
 }
@@ -71,40 +98,19 @@ func (r *rmq) Emit(Event string, data interface{}) error {
 	}
 	return nil
 }
-
 func (r *rmq) Request(event string, data any) ([]byte, error) {
+
 	body, err := json.Marshal(data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal message: %w", err)
+		return nil, err
 	}
 
-	// Temporary reply queue
-	replyQueue, err := r.Channel.QueueDeclare(
-		"",    // generated name
-		false, // durable
-		true,  // auto delete
-		true,  // exclusive
-		false,
-		nil,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create reply queue: %w", err)
-	}
+	corrID := uuid.NewString()
 
-	msgs, err := r.Channel.Consume(
-		replyQueue.Name,
-		"",
-		true,
-		true,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to consume reply queue: %w", err)
-	}
+	ch := make(chan []byte, 1)
 
-	correlationID := uuid.NewString()
+	r.pending.Store(corrID, ch)
+	defer r.pending.Delete(corrID)
 
 	err = r.Channel.Publish(
 		os.Getenv("EXCHANGE"),
@@ -113,29 +119,56 @@ func (r *rmq) Request(event string, data any) ([]byte, error) {
 		false,
 		amqp.Publishing{
 			ContentType:   "application/json",
-			CorrelationId: correlationID,
-			ReplyTo:       replyQueue.Name,
+			CorrelationId: corrID,
+			ReplyTo:       "rpc.responses",
 			Body:          body,
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to publish request: %w", err)
+		return nil, err
 	}
 
-	timeout := time.After(10 * time.Second)
+	select {
+	case res := <-ch:
+		return res, nil
 
-	for {
-		select {
-		case msg := <-msgs:
-			if msg.CorrelationId == correlationID {
-				return msg.Body, nil
-			}
-
-		case <-timeout:
-			return nil, fmt.Errorf("request timed out after 10 seconds")
-		}
+	case <-time.After(10 * time.Second):
+		return nil, fmt.Errorf("timeout")
 	}
 }
+
+func (r *rmq) StartResponseListener(queue string) error {
+	log.Println("🚀 RPC response listener started on rpc.responses")
+
+	msgs, err := r.Channel.Consume(
+		queue,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for msg := range msgs {
+
+			if ch, ok := r.pending.Load(msg.CorrelationId); ok {
+				select {
+				case ch.(chan []byte) <- msg.Body:
+				default:
+					// avoid blocking if receiver is gone
+				}
+			}
+		}
+	}()
+
+	return nil
+}
+
 func (r *rmq) Consume(app *App, queueName string, reciever func(*App, amqp.Delivery) error) error {
 	msgs, err := r.Channel.Consume(
 		queueName,

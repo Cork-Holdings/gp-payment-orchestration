@@ -50,6 +50,7 @@ func New() *App {
 			MQ:    GetMQ(),
 		}
 	})
+
 	return a
 }
 

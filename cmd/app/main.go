@@ -5,6 +5,7 @@ import (
 
 	"github.com/Cork-Holdings/gp_payment_orchestration/cmd"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/mocks"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/feeprofiles"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantapikeys"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantfeeprofiles"
@@ -42,6 +43,14 @@ func main() {
 		&merchantapikeys.MerchantAPIKey{},
 		&merchantips.MerchantIP{},
 	)
+
+	mocks.StartFakeTransactionService(app)
+	mocks.StartFakeMerchantService(app)
+	mocks.StartMerchantCollectionBalanceService(app)
+	mocks.StartMerchantDisbursementBalanceService(app)
+
+	mocks.StartFakeCollectionsService("test-collection-ref-01", app)
+	mocks.StartFakeDisbursementsService("test-disbursement-ref-01", app)
 
 	cmd.Execute()
 }

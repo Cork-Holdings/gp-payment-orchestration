@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -40,6 +41,48 @@ type VerifyRequest struct {
 	IPAddress string `json:"ip_address"`
 }
 
+type CheckStatusRequest struct {
+	TransactionRef string `json:"transaction_ref"`
+	ClientID       string `json:"client_id"`
+}
+
+type CheckStatusResponse struct {
+	// TransactionRef string      `json:"transaction_ref"`
+	Status  string      `json:"status"`
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
+type CheckCollectionBalanceRequest struct {
+	ClientID string `json:"client_id"`
+}
+type CheckCollectionBalanceResponse struct {
+	Code    int         `json:"code"`
+	Status  string      `json:"status"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
+type CheckDisbursementBalanceRequest struct {
+	ClientID       string `json:"client_id"`
+	XAuthSignature string `json:"x_auth_signature"`
+}
+type CheckDisbursementBalanceResponse struct {
+	Code    int         `json:"code"`
+	Status  string      `json:"status"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
+type CreateCheckoutSessionRequest struct {
+	TransactionRef string `json:"transaction_ref"`
+}
+
+type CreateCheckoutSessionResponse struct {
+	TransactionRef string `json:"transaction_ref"`
+}
+
 type VerifyResponse struct {
 	Valid        bool   `json:"valid"`
 	TenantID     string `json:"tenant_id,omitempty"`
@@ -56,13 +99,13 @@ type CollectRequest struct {
 }
 
 type DisburseRequest struct {
-	ClientID    string  `json:"client_id"`
-	PhoneNumber string  `json:"phone_number"`
-	Amount      float64 `json:"amount"`
-	// Currency       string  `json:"currency"`
-	Signature      string `json:"signature"`
-	RawBody        string `json:"raw_body"`
-	TransactionRef string `json:"transaction_ref"`
+	ClientID       string  `json:"client_id"`
+	PhoneNumber    string  `json:"phone_number"`
+	Amount         float64 `json:"amount"`
+	Narration      string  `json:"narration"`
+	Signature      string  `json:"signature"`
+	RawBody        string  `json:"raw_body"`
+	TransactionRef string  `json:"transaction_ref"`
 }
 
 type DisburseResponse struct {
@@ -180,7 +223,7 @@ type CollectResponse struct {
 }
 
 // HandleCollect initiates an async collection, transitioning PENDING -> PROCESSING
-func HandleCollect(app *global.App, req *CollectRequest) (*CollectResponse, error) {
+func HandleCollection(app *global.App, req *CollectRequest) (*CollectResponse, error) {
 	if len(req.PhoneNumber) < 5 {
 		return nil, fmt.Errorf("invalid phone number")
 	}
@@ -192,6 +235,25 @@ func HandleCollect(app *global.App, req *CollectRequest) (*CollectResponse, erro
 		return nil, fmt.Errorf("failed to extract merchant ID: %v", err)
 	}
 	merchantID := mApiKey.MerchantID.String()
+
+	//Get merchant details via rabbitMQ request
+	merchantPayload := map[string]interface{}{
+		"merchant_id": merchantID,
+	}
+
+	merchantResponseBytes, err := app.MQ.Request("merchants.get_details", merchantPayload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get merchant details: %v", err)
+	}
+
+	var merchantResponse map[string]interface{}
+	if err := json.Unmarshal(merchantResponseBytes, &merchantResponse); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal merchant details: %v", err)
+	}
+
+	if merchantResponse["code"] != 200 {
+		return nil, fmt.Errorf("failed to get merchant details: %v", merchantResponse["message"])
+	}
 
 	// Calculate fees for this collection
 	feeResult, err := feecalculator.CalculateFees(
@@ -248,64 +310,22 @@ func HandleCollect(app *global.App, req *CollectRequest) (*CollectResponse, erro
 
 	utils.LogAuditEvent(app, "merchant_service", "collection.forwarded", transactionPayload)
 
-	// Simulation based on prefix
-	prefix := req.PhoneNumber[:5]
-
-	switch prefix {
-	case "26096", "26076": // MTN -> Pending
-		return &CollectResponse{
-			Code:    200,
-			Status:  "pending",
-			Message: "Payment request sent. Awaiting customer action.",
-			Data: map[string]interface{}{
-				"transaction_reference": req.TransactionRef,
-				"fees": map[string]interface{}{
-					"transaction_fee": feeResult.TransactionFeeAmount,
-					"net_amount":      feeResult.NetAmount,
-				},
-			},
-		}, nil
-	case "26097", "26057", "26077": // Airtel -> Success
-		return &CollectResponse{
-			Code:    200,
-			Status:  "success",
-			Message: "Payment was successful.",
-			Data: map[string]interface{}{
-				"transaction_reference": req.TransactionRef,
-				"external_reference":    "EXT-" + time.Now().Format("20060102150405"),
-				"fees": map[string]interface{}{
-					"transaction_fee": feeResult.TransactionFeeAmount,
-					"net_amount":      feeResult.NetAmount,
-				},
-			},
-		}, nil
-	case "26095", "26075": // Zamtel -> Failed
-		return &CollectResponse{
-			Code:    402,
-			Status:  "failed",
-			Message: "Payment failed: low balance or payee limit reached or not allowed",
-			Data: map[string]interface{}{
-				"transaction_reference": req.TransactionRef,
-			},
-		}, nil
-	default:
-		return &CollectResponse{
-			Code:    200,
-			Status:  "pending",
-			Message: "Payment request initiated.",
-			Data: map[string]interface{}{
-				"transaction_reference": req.TransactionRef,
-				"fees": map[string]interface{}{
-					"transaction_fee": feeResult.TransactionFeeAmount,
-					"net_amount":      feeResult.NetAmount,
-				},
-			},
-		}, nil
+	// Forward to transactions service
+	responseBytes, err := app.MQ.Request("transactions.process", transactionPayload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to forward collection to RabbitMQ: %v", err)
 	}
+
+	var result CollectResponse
+	if err := json.Unmarshal(responseBytes, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response from transactions service: %v", err)
+	}
+
+	return &result, nil
 }
 
 // HandleDisburse processes disbursement requests synchronously, verifying signature and checking balance
-func HandleDisburse(app *global.App, req *DisburseRequest) (*DisburseResponse, error) {
+func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseResponse, error) {
 
 	var mApiKey merchantapikeys.MerchantAPIKey
 	err := app.DB.Where("client_id = ?", req.ClientID).First(&mApiKey).Error
@@ -333,4 +353,140 @@ func computeHMAC(message string, secret string) string {
 	h := hmac.New(sha256.New, key)
 	h.Write([]byte(message))
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+func HandleCollectionCheckStatus(app *global.App, req *CheckStatusRequest) (*CheckStatusResponse, error) {
+
+	///Forward to transactions service via RabbitMQ
+	transactionPayload := map[string]interface{}{
+		"transaction_ref": req.TransactionRef,
+		"type":            "MNO_COLLECTION",
+		"client_id":       req.ClientID,
+	}
+
+	responseBytes, err := app.MQ.Request(
+		"transactions.check_status",
+		transactionPayload,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var response CheckStatusResponse
+
+	err = json.Unmarshal(responseBytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+
+}
+
+func HandleCollectionCheckBalance(app *global.App, req *CheckCollectionBalanceRequest) (*CheckCollectionBalanceResponse, error) {
+
+	///Forward to transactions service via RabbitMQ
+	balancePayload := map[string]interface{}{
+		"client_id": req.ClientID,
+	}
+
+	responseBytes, err := app.MQ.Request(
+		"merchant.accounts.check_balance",
+		balancePayload,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var response CheckCollectionBalanceResponse
+
+	err = json.Unmarshal(responseBytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+}
+
+func HandleDisbursementCheckStatus(app *global.App, req *CheckStatusRequest) (*CheckStatusResponse, error) {
+
+	///Forward to transactions service via RabbitMQ
+	transactionPayload := map[string]interface{}{
+		"transaction_ref": req.TransactionRef,
+		"type":            "MNO_DISBURSEMENT",
+		"client_id":       req.ClientID,
+	}
+
+	responseBytes, err := app.MQ.Request(
+		"transactions.check_status",
+		transactionPayload,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var response CheckStatusResponse
+
+	err = json.Unmarshal(responseBytes, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
+
+}
+
+func HandleDisbursementCheckBalance(app *global.App, req *CheckDisbursementBalanceRequest) (*CheckDisbursementBalanceResponse, error) {
+
+	//Check if client ID is in merhchants table
+	var merchant merchantapikeys.MerchantAPIKey
+	err := app.DB.Where("client_id = ?", req.ClientID).First(&merchant).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to find merchant: %v", err)
+	}
+
+	encryptionKey := []byte(os.Getenv("ENCRYPTION_KEY"))
+	if len(encryptionKey) == 0 {
+		return nil, fmt.Errorf("ENCRYPTION_KEY not set")
+	}
+
+	pin, err := utils.Decrypt(merchant.Pin, encryptionKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decrypt pin: %v", err)
+	}
+
+	expectedSignature := computeHMAC(fmt.Sprintf("%s:%s", req.ClientID, pin), merchant.ClientSecret)
+	if req.XAuthSignature != expectedSignature {
+		return &CheckDisbursementBalanceResponse{
+			Code:    401,
+			Status:  "error",
+			Message: "Invalid authentication signature",
+		}, nil
+	}
+
+	///Forward to transactions service via RabbitMQ
+	balancePayload := map[string]interface{}{
+		"merchant_id": merchant.MerchantID,
+	}
+
+	responseBytes, err := app.MQ.Request(
+		"merchant.accounts.disbursement.check_balance",
+		balancePayload,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var response CheckDisbursementBalanceResponse
+
+	err = json.Unmarshal(responseBytes, &response)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+
+	return &response, nil
 }

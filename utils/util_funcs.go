@@ -2,8 +2,13 @@ package utils
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	cryptorand "crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"math/rand"
 	"strings"
 	"time"
@@ -71,4 +76,59 @@ func GetIPAddress(ctx context.Context) string {
 
 	return ip
 
+}
+
+// Encrypt encrypts plaintext using AES-GCM.
+// key must be 16, 24, or 32 bytes long.
+func Encrypt(plaintext string, key []byte) (string, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err := io.ReadFull(cryptorand.Reader, nonce); err != nil {
+		return "", err
+	}
+
+	ciphertext := gcm.Seal(nonce, nonce, []byte(plaintext), nil)
+
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
+// Decrypt decrypts an AES-GCM encrypted string.
+func Decrypt(encodedCiphertext string, key []byte) (string, error) {
+	data, err := base64.StdEncoding.DecodeString(encodedCiphertext)
+	if err != nil {
+		return "", err
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+
+	nonceSize := gcm.NonceSize()
+	if len(data) < nonceSize {
+		return "", fmt.Errorf("ciphertext too short")
+	}
+
+	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
+
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return "", err
+	}
+
+	return string(plaintext), nil
 }

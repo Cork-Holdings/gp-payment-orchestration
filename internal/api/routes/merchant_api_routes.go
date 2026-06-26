@@ -27,6 +27,23 @@ func RegisterMerchantRoutes(e *gin.Engine, app *global.App) {
 		// B. Mobile Money Disbursements (Synchronous, X-Auth-Signature validated)
 		protected.POST("/mobile-money/disburse", merchantapihandlers.HandleDisbursementHandler)
 
+		// C. Mobile Money Collection Check Status
+		protected.GET("/mobile-money/check-status/:transaction_ref", merchantapihandlers.HandleCollectionCheckStatusHandler)
+
+		// D. Mobile Money Collection Check Balance
+		protected.GET("/mobile-money/collect/balance", merchantapihandlers.HandleCollectionCheckBalanceHandler)
+
+		// E. Mobile Money Disbursement Check Status
+		protected.GET("/mobile-money/disburse/status/:transaction_ref", merchantapihandlers.HandleDisbursementCheckStatusHandler)
+
+		// F. Mobile Money Disbursement Check Balance
+		protected.GET("/mobile-money/disburse/balance", merchantapihandlers.HandleDisbursementCheckBalanceHandler)
+
+		// G. Create Checkout Session
+		protected.POST("/checkout/session", merchantapihandlers.HandleCreateCheckoutSessionHandler)
+
+		// H. Get Checkout Session
+		// protected.GET("/checkout/session/:id", merchantapihandlers.HandleGetCheckoutSessionHandler)
 	}
 }
 

@@ -1,7 +1,6 @@
 package merchantapihandlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"regexp"
 
@@ -71,7 +70,7 @@ func HandleCollectionHandler(c *gin.Context) {
 		TransactionRef: transactionRef,
 	}
 
-	resp, err := merchantapis.HandleCollect(global.New(), collectReq)
+	resp, err := merchantapis.HandleCollection(global.New(), collectReq)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -97,19 +96,14 @@ func HandleDisbursementHandler(c *gin.Context) {
 		return
 	}
 
-	rawBody, err := c.GetRawData()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to read request body"})
-		return
-	}
-
 	var req struct {
 		PhoneNumber string  `json:"phone_number" binding:"required"`
 		Amount      float64 `json:"amount" binding:"required,gt=0"`
+		Narration   string  `json:"narration"`
 		// Currency    string  `json:"currency" binding:"required"`
 	}
 
-	if err := json.Unmarshal(rawBody, &req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON body: " + err.Error()})
 		return
 	}
@@ -120,15 +114,113 @@ func HandleDisbursementHandler(c *gin.Context) {
 		ClientID:       clientID,
 		PhoneNumber:    req.PhoneNumber,
 		Amount:         req.Amount,
+		Narration:      req.Narration,
 		Signature:      signature,
-		RawBody:        string(rawBody),
 		TransactionRef: transactionRef,
 	}
 
-	resp, err := merchantapis.HandleDisburse(app, disburseReq)
+	resp, err := merchantapis.HandleDisbursement(app, disburseReq)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, resp)
+}
+
+func HandleCollectionCheckStatusHandler(c *gin.Context) {
+
+	transactionRef := c.Param("transaction_ref")
+
+	if transactionRef == "" {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "missing transaction_ref"})
+		return
+	}
+
+	clientID := c.GetString("client_id")
+
+	checkStatusReq := &merchantapis.CheckStatusRequest{
+		TransactionRef: transactionRef,
+		ClientID:       clientID,
+	}
+
+	checkStatusResp, err := merchantapis.HandleCollectionCheckStatus(global.New(), checkStatusReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(checkStatusResp.Code, checkStatusResp)
+}
+
+func HandleCollectionCheckBalanceHandler(c *gin.Context) {
+
+	clientID := c.GetString("client_id")
+
+	checkBalanceReq := &merchantapis.CheckCollectionBalanceRequest{
+		ClientID: clientID,
+	}
+
+	checkBalanceResp, err := merchantapis.HandleCollectionCheckBalance(global.New(), checkBalanceReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(checkBalanceResp.Code, checkBalanceResp)
+
+}
+
+func HandleDisbursementCheckStatusHandler(c *gin.Context) {
+
+	transactionRef := c.Param("transaction_ref")
+
+	if transactionRef == "" {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "missing transaction_ref"})
+		return
+	}
+
+	clientID := c.GetString("client_id")
+
+	checkStatusReq := &merchantapis.CheckStatusRequest{
+		TransactionRef: transactionRef,
+		ClientID:       clientID,
+	}
+
+	checkStatusResp, err := merchantapis.HandleDisbursementCheckStatus(global.New(), checkStatusReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(checkStatusResp.Code, checkStatusResp)
+
+}
+
+func HandleDisbursementCheckBalanceHandler(c *gin.Context) {
+
+	clientID := c.GetString("client_id")
+
+	xAuthSignature := c.GetHeader("X-Auth-Signature")
+	if xAuthSignature == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing X-Auth-Signature header"})
+		return
+	}
+
+	checkBalanceReq := &merchantapis.CheckDisbursementBalanceRequest{
+		ClientID:       clientID,
+		XAuthSignature: xAuthSignature,
+	}
+
+	checkBalanceResp, err := merchantapis.HandleDisbursementCheckBalance(global.New(), checkBalanceReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(checkBalanceResp.Code, checkBalanceResp)
+
+}
+
+func HandleCreateCheckoutSessionHandler(c *gin.Context) {
+
 }
