@@ -70,11 +70,7 @@ func HandleCollectionHandler(c *gin.Context) {
 		TransactionRef: transactionRef,
 	}
 
-	resp, err := merchantapis.HandleCollection(global.New(), collectReq)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	resp := merchantapis.HandleCollection(global.New(), collectReq)
 
 	c.JSON(resp.Code, resp)
 }

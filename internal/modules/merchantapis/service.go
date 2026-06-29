@@ -223,37 +223,61 @@ type CollectResponse struct {
 }
 
 // HandleCollect initiates an async collection, transitioning PENDING -> PROCESSING
-func HandleCollection(app *global.App, req *CollectRequest) (*CollectResponse, error) {
-	if len(req.PhoneNumber) < 5 {
-		return nil, fmt.Errorf("invalid phone number")
+func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
+	if len(req.PhoneNumber) < 12 {
+		return &CollectResponse{
+			Code:    400,
+			Status:  "failed",
+			Message: "Invalid Phone number",
+			Data:    nil,
+		}
+	}
+
+	if req.Amount <= 0.01 {
+		return &CollectResponse{
+			Code:    400,
+			Status:  "failed",
+			Message: "Minimum amount is K1",
+			Data:    nil,
+		}
 	}
 
 	//Extract Merchant ID from Client ID
 	var mApiKey merchantapikeys.MerchantAPIKey
 	err := app.DB.Where("client_id = ?", req.ClientID).First(&mApiKey).Error
 	if err != nil {
-		return nil, fmt.Errorf("failed to extract merchant ID: %v", err)
+		return &CollectResponse{
+			Code:    400,
+			Status:  "failed",
+			Message: "Failed to extract merchant ID",
+			Data:    nil,
+		}
 	}
 	merchantID := mApiKey.MerchantID.String()
 
 	//Get merchant details via rabbitMQ request
-	merchantPayload := map[string]interface{}{
-		"merchant_id": merchantID,
-	}
+	// merchantPayload := map[string]interface{}{
+	// 	"merchant_id": merchantID,
+	// }
 
-	merchantResponseBytes, err := app.MQ.Request("merchants.get_details", merchantPayload)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get merchant details: %v", err)
-	}
+	// merchantResponseBytes, err := app.MQ.Request("merchants.get_details", merchantPayload)
+	// if err != nil {
+	// 	return &CollectResponse{
+	// 		Code:    400,
+	// 		Status:  "failed",
+	// 		Message: "Failed to extract merchant ID",
+	// 		Data:    nil,
+	// 	}, fmt.Errorf("failed to get merchant details: %v", err)
+	// }
 
-	var merchantResponse map[string]interface{}
-	if err := json.Unmarshal(merchantResponseBytes, &merchantResponse); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal merchant details: %v", err)
-	}
+	// var merchantResponse map[string]interface{}
+	// if err := json.Unmarshal(merchantResponseBytes, &merchantResponse); err != nil {
+	// 	return nil, fmt.Errorf("failed to unmarshal merchant details: %v", err)
+	// }
 
-	if merchantResponse["code"] != 200 {
-		return nil, fmt.Errorf("failed to get merchant details: %v", merchantResponse["message"])
-	}
+	// if merchantResponse["code"] != 200 {
+	// 	return nil, fmt.Errorf("failed to get merchant details: %v", merchantResponse["message"])
+	// }
 
 	// Calculate fees for this collection
 	feeResult, err := feecalculator.CalculateFees(
@@ -263,18 +287,23 @@ func HandleCollection(app *global.App, req *CollectRequest) (*CollectResponse, e
 		feecalculator.TransactionTypeCollection,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate fees: %v", err)
-	}
-
-	// Check if fee calculation returned an error status
-	if feeResult.Status == "error" {
 		return &CollectResponse{
 			Code:    400,
 			Status:  "failed",
 			Message: feeResult.Error,
 			Data:    nil,
-		}, nil
+		}
 	}
+
+	// // Check if fee calculation returned an error status
+	// if feeResult.Status == "error" {
+	// 	return &CollectResponse{
+	// 		Code:    400,
+	// 		Status:  "failed",
+	// 		Message: feeResult.Error,
+	// 		Data:    nil,
+	// 	},
+	// }
 
 	// Log the fee calculation result
 	feeResultJSON, _ := json.Marshal(feeResult)
@@ -311,17 +340,53 @@ func HandleCollection(app *global.App, req *CollectRequest) (*CollectResponse, e
 	utils.LogAuditEvent(app, "merchant_service", "collection.forwarded", transactionPayload)
 
 	// Forward to transactions service
-	responseBytes, err := app.MQ.Request("transactions.process", transactionPayload)
+	responseBytes, err := app.MQ.Request("transactions.create", transactionPayload)
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to forward collection to RabbitMQ: %v", err)
+		return &CollectResponse{
+			Code:    400,
+			Status:  "failed",
+			Message: "Unable to create transaction",
+			Data:    nil,
+		}
 	}
 
-	var result CollectResponse
-	if err := json.Unmarshal(responseBytes, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response from transactions service: %v", err)
+	var transactionsResp CollectResponse
+
+	if err := json.Unmarshal(responseBytes, &transactionsResp); err != nil {
+		return &CollectResponse{
+			Code:    400,
+			Status:  "failed",
+			Message: "Unable to unmarshal transaction response",
+			Data:    nil,
+		}
 	}
 
-	return &result, nil
+	//From this step transaction has been created
+
+	//Send request to MNO service
+	mnoPayload := map[string]interface{}{
+		"phone_number":    req.PhoneNumber,
+		"amount":          req.Amount,
+		"transaction_ref": req.TransactionRef,
+		"type":            "MNO_COLLECTION",
+		"provider":        "PENDING",
+	}
+
+	// Log the transaction payload (simulating queue send to transactions service)
+	mnoPayloadJSON, err := json.Marshal(mnoPayload)
+	log.Printf("[HandleCollect] Simulating send to MNO service queue: %s", string(mnoPayloadJSON))
+
+	if err != nil {
+		return &CollectResponse{
+			Code:    400,
+			Status:  "failed",
+			Message: "Rabbit MQ Error response",
+			Data:    nil,
+		}
+	}
+
+	return &transactionsResp
 }
 
 // HandleDisburse processes disbursement requests synchronously, verifying signature and checking balance

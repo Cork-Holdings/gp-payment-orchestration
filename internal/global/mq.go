@@ -17,8 +17,9 @@ var (
 )
 
 type rmq struct {
-	Conn    *amqp.Connection
-	Channel *amqp.Channel
+	Conn         *amqp.Connection
+	Channel      *amqp.Channel
+	ReplyToQueue string
 
 	pending sync.Map
 }
@@ -43,35 +44,28 @@ func GetMQ() *rmq {
 		}
 		mq.Channel = ch
 		ch.ExchangeDeclare(os.Getenv("EXCHANGE"), "topic", true, false, false, false, nil)
-		q, _ := ch.QueueDeclare(os.Getenv("QUEUE_NAME"), true, false, false, false, nil)
-		ch.QueueBind(q.Name, "gateway.*", os.Getenv("EXCHANGE"), false, nil)
-		ch.QueueBind(q.Name, "auth.*", os.Getenv("EXCHANGE"), false, nil)
-		ch.QueueBind(q.Name, "collection.*", os.Getenv("EXCHANGE"), false, nil)
-		ch.QueueBind(q.Name, "disbursement.*", os.Getenv("EXCHANGE"), false, nil)
-		q, err = ch.QueueDeclare(
-			"rpc.responses",
-			true,
-			false,
-			false,
-			false,
-			nil,
+		_, _ = ch.QueueDeclare(os.Getenv("QUEUE_NAME"), true, false, false, false, nil)
+		// ch.QueueBind(q.Name, "transactions.*", os.Getenv("EXCHANGE"), false, nil)
+		// ch.QueueBind(q.Name, "auth.*", os.Getenv("EXCHANGE"), false, nil)
+		// ch.QueueBind(q.Name, "collection.*", os.Getenv("EXCHANGE"), false, nil)
+		// ch.QueueBind(q.Name, "disbursement.*", os.Getenv("EXCHANGE"), false, nil)
+		
+		// Declare exclusive, auto-delete queue for responses unique to this worker connection instance
+		qResp, err := ch.QueueDeclare(
+			"",    // Let RabbitMQ generate a completely unique queue name
+			false, // durable
+			true,  // delete when unused (auto-delete)
+			true,  // exclusive to this connection channel
+			false, // no-wait
+			nil,   // arguments
 		)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		ch.QueueBind(
-			q.Name,
-			"rpc.responses",
-			os.Getenv("EXCHANGE"),
-			false,
-			nil,
-		)
-		if err != nil {
-			log.Fatalf("failed to declare rpc.responses queue: %v", err)
-		}
+		mq.ReplyToQueue = qResp.Name
 
-		if err := mq.StartResponseListener(q.Name); err != nil {
+		if err := mq.StartResponseListener(qResp.Name); err != nil {
 			log.Fatalf("failed to start response listener: %v", err)
 		}
 	}
@@ -120,7 +114,7 @@ func (r *rmq) Request(event string, data any) ([]byte, error) {
 		amqp.Publishing{
 			ContentType:   "application/json",
 			CorrelationId: corrID,
-			ReplyTo:       "rpc.responses",
+			ReplyTo:       r.ReplyToQueue,
 			Body:          body,
 		},
 	)
@@ -138,7 +132,7 @@ func (r *rmq) Request(event string, data any) ([]byte, error) {
 }
 
 func (r *rmq) StartResponseListener(queue string) error {
-	log.Println("🚀 RPC response listener started on rpc.responses")
+	log.Printf("🚀 RPC response listener started on exclusive queue: %s", queue)
 
 	msgs, err := r.Channel.Consume(
 		queue,
@@ -155,13 +149,16 @@ func (r *rmq) StartResponseListener(queue string) error {
 
 	go func() {
 		for msg := range msgs {
-
+			log.Printf("[MQ RPC Listener] Received response message (CorrelationId: %s)", msg.CorrelationId)
 			if ch, ok := r.pending.Load(msg.CorrelationId); ok {
 				select {
 				case ch.(chan []byte) <- msg.Body:
+					log.Printf("[MQ RPC Listener] Forwarded body to channel (CorrelationId: %s)", msg.CorrelationId)
 				default:
-					// avoid blocking if receiver is gone
+					log.Printf("[MQ RPC Listener] Channel full or reader gone (CorrelationId: %s)", msg.CorrelationId)
 				}
+			} else {
+				log.Printf("[MQ RPC Listener] No pending channel found for CorrelationId: %s", msg.CorrelationId)
 			}
 		}
 	}()
