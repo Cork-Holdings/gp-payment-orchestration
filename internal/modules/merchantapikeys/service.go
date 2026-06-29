@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -17,6 +18,11 @@ import (
 )
 
 func CreateMerchantKeys(merchantID string) (*MerchantAPIKey, error) {
+
+	//Parse the merchant ID to ensure it's a valid UUID
+	if _, err := uuid.Parse(merchantID); err != nil {
+		return nil, fmt.Errorf("invalid merchant ID: %v", err)
+	}
 
 	//Generate a random client ID and client secret
 	clientID := common.GenerateRandomString(32)
@@ -43,12 +49,40 @@ func CreateMerchantKeys(merchantID string) (*MerchantAPIKey, error) {
 		return nil, err
 	}
 
+	// Request account provisioning before committing transaction
+	responseBytes, err := global.GetMQ().Request("merchant.accounts.create", map[string]any{
+		"merchant_id": merchantID,
+	})
+	if err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("account provisioning failed: %w", err)
+	}
+
+	var rpcResp struct {
+		Code    int    `json:"code"`
+		Status  string `json:"status"`
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(responseBytes, &rpcResp); err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("invalid provisioning response: %w", err)
+	}
+
+	if rpcResp.Code != 200 {
+		tx.Rollback()
+		if rpcResp.Message == "" {
+			rpcResp.Message = "unknown provisioning error"
+		}
+		return nil, fmt.Errorf("account provisioning failed: %s", rpcResp.Message)
+	}
+
+	// Commit transaction only after account provisioning succeeds
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
-	// Emit event to RabbitMQ
+	// Emit event to RabbitMQ after successful commit
 	eventPayload := map[string]interface{}{
 		"merchant_id": merchantID,
 		"client_id":   clientID,

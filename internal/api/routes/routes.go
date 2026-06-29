@@ -120,7 +120,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 
 	merchantApiKeyRoutes := e.Group("/merchant-api-keys")
 	{
-		// merchantApiKeyRoutes.POST("/create", handlers.CreateMerchantAPIKeyHandler)
+		merchantApiKeyRoutes.POST("/create", handlers.CreateMerchantAPIKeysHandler)
 		merchantApiKeyRoutes.GET("/list", handlers.GetMerchantAPIKeysHandler)
 		merchantApiKeyRoutes.PUT("/update", handlers.UpdateMerchantAPIKeyHandler)
 		merchantApiKeyRoutes.DELETE("/delete/:id", handlers.DeleteMerchantAPIKeyHandler)

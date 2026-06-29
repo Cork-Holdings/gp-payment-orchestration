@@ -363,30 +363,87 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 	}
 
 	//From this step transaction has been created
+	//Get provider via prefix
+	provider := getProviderFromPhoneNumber(req.PhoneNumber)
+
+	if provider == "Unsupported Provider for "+req.PhoneNumber {
+		return &CollectResponse{
+			Code:    400,
+			Status:  "failed",
+			Message: "Unsupported Provider for " + req.PhoneNumber,
+			Data:    nil,
+		}
+	}
 
 	//Send request to MNO service
 	mnoPayload := map[string]interface{}{
+		"transaction_ref": req.TransactionRef,
 		"phone_number":    req.PhoneNumber,
 		"amount":          req.Amount,
-		"transaction_ref": req.TransactionRef,
-		"type":            "MNO_COLLECTION",
-		"provider":        "PENDING",
+		"currency":        "ZMW", // Default currency
+		"provider":        provider,
+		"callback_url":    "", // Optional: can be set from config if needed
 	}
 
-	// Log the transaction payload (simulating queue send to transactions service)
-	mnoPayloadJSON, err := json.Marshal(mnoPayload)
-	log.Printf("[HandleCollect] Simulating send to MNO service queue: %s", string(mnoPayloadJSON))
+	mnoRespBytes, err := app.MQ.Request("mno.collection.requests", mnoPayload)
 
 	if err != nil {
 		return &CollectResponse{
 			Code:    400,
 			Status:  "failed",
-			Message: "Rabbit MQ Error response",
+			Message: "MNO service request failed: " + err.Error(),
 			Data:    nil,
 		}
 	}
 
-	return &transactionsResp
+	//Example successful response from MNO service
+	// {
+	//    "code": 200,
+	//    "status": "success",
+	//    "message": "Collection request accepted and processing",
+	//    "data": {
+	//      "transaction_ref":"e162f10b-06ab-4168-bdab-e24a2cff99b2",
+	//      "phone_number":"260956587842",
+	//      "amount":5,
+	//      "currency":"ZMW",
+	//      "provider":"zamtel",
+	//      "external_reference":"V406HWGD",
+	//      "status":"pending",
+	//      "processed_at":"2026-06-29T08:13:06Z"
+	//    }
+	// }
+
+	var mnoResp CollectResponse
+
+	if err := json.Unmarshal(mnoRespBytes, &mnoResp); err != nil {
+		return &CollectResponse{
+			Code:    400,
+			Status:  "failed",
+			Message: "Unable to unmarshal mno response",
+			Data:    nil,
+		}
+	}
+
+	// Check if MNO service returned an error
+	if mnoResp.Code != 200 {
+		return &CollectResponse{
+			Code:    mnoResp.Code,
+			Status:  "failed",
+			Message: "MNO service error: " + mnoResp.Message,
+			Data:    nil,
+		}
+	}
+
+	// MNO service accepted the request. Log and return success.
+	// The MNO service will continue processing asynchronously and callback with results.
+	log.Printf("[HandleCollect] MNO service accepted collection request for transaction_ref: %s", req.TransactionRef)
+
+	return &CollectResponse{
+		Code:    200,
+		Status:  "success",
+		Message: "Collection request forwarded to MNO service and is now processing",
+		Data:    mnoResp.Data,
+	}
 }
 
 // HandleDisburse processes disbursement requests synchronously, verifying signature and checking balance
@@ -403,14 +460,112 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 	if !strings.EqualFold(expectedSig, req.Signature) {
 		return &DisburseResponse{Status: "FAILED", ErrorCode: "INVALID_SIGNATURE"}, errors.New("invalid signature")
 	}
+
+	merchantID := mApiKey.MerchantID.String()
+
+	balanceRespBytes, err := app.MQ.Request("merchant.accounts.disbursement.check_balance", map[string]any{
+		"merchant_id": merchantID,
+		"amount":      req.Amount,
+	})
+	if err != nil {
+		return &DisburseResponse{Status: "FAILED", ErrorCode: "BALANCE_CHECK_FAILED"}, fmt.Errorf("failed to check merchant float balance: %w", err)
+	}
+
+	var balanceResp struct {
+		Code    int    `json:"code"`
+		Status  string `json:"status"`
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(balanceRespBytes, &balanceResp); err != nil {
+		return &DisburseResponse{Status: "FAILED", ErrorCode: "BALANCE_CHECK_FAILED"}, fmt.Errorf("invalid balance response payload: %w", err)
+	}
+
+	if balanceResp.Code != 200 {
+		if balanceResp.Message == "" {
+			balanceResp.Message = "insufficient float balance"
+		}
+		return &DisburseResponse{Status: "FAILED", ErrorCode: "INSUFFICIENT_FLOAT_BALANCE"}, errors.New(balanceResp.Message)
+	}
+
+	feeResult, err := feecalculator.CalculateFees(
+		merchantID,
+		req.PhoneNumber,
+		req.Amount,
+		feecalculator.TransactionTypeDisbursement,
+	)
+	if err != nil {
+		if feeResult.Error == "" {
+			feeResult.Error = err.Error()
+		}
+		return &DisburseResponse{Status: "FAILED", ErrorCode: "FEE_CALCULATION_FAILED"}, errors.New(feeResult.Error)
+	}
+
+	transactionPayload := map[string]any{
+		"client_id":              req.ClientID,
+		"merchant_id":            merchantID,
+		"phone_number":           req.PhoneNumber,
+		"amount":                 req.Amount,
+		"transaction_ref":        req.TransactionRef,
+		"type":                   "MNO_DISBURSEMENT",
+		"status":                 "PENDING",
+		"fee_calculation":        feeResult,
+		"transaction_fee_amount": feeResult.TransactionFeeAmount,
+		"provider_fee_amount":    feeResult.ProviderFeeAmount,
+		"commission_fee_amount":  feeResult.CommissionFeeAmount,
+		"net_amount":             feeResult.NetAmount,
+		"fee_profile_id":         feeResult.FeeProfileID,
+		"payment_channel_id":     feeResult.PaymentChannelID,
+		"description":            req.Narration,
+	}
+
+	if _, err := app.MQ.Request("transactions.create", transactionPayload); err != nil {
+		return &DisburseResponse{Status: "FAILED", ErrorCode: "TRANSACTION_CREATE_FAILED"}, fmt.Errorf("failed to create disbursement transaction: %w", err)
+	}
+
+	provider := getProviderFromPhoneNumber(req.PhoneNumber)
+	if provider == "Unsupported Provider for "+req.PhoneNumber {
+		return &DisburseResponse{Status: "FAILED", ErrorCode: "UNSUPPORTED_PROVIDER"}, errors.New(provider)
+	}
+
+	mnoPayload := map[string]any{
+		"transaction_ref": req.TransactionRef,
+		"phone_number":    req.PhoneNumber,
+		"amount":          req.Amount,
+		"currency":        "ZMW",
+		"provider":        provider,
+		"narration":       req.Narration,
+	}
+
+	mnoRespBytes, err := app.MQ.Request("mno.disbursement.requests", mnoPayload)
+	if err != nil {
+		return &DisburseResponse{Status: "FAILED", ErrorCode: "MNO_REQUEST_FAILED"}, fmt.Errorf("failed to forward disbursement to mno service: %w", err)
+	}
+
+	var mnoResp struct {
+		Code    int    `json:"code"`
+		Status  string `json:"status"`
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(mnoRespBytes, &mnoResp); err != nil {
+		return &DisburseResponse{Status: "FAILED", ErrorCode: "MNO_RESPONSE_INVALID"}, fmt.Errorf("failed to parse mno response: %w", err)
+	}
+
+	if mnoResp.Code != 200 {
+		if mnoResp.Message == "" {
+			mnoResp.Message = "mno service rejected disbursement"
+		}
+		return &DisburseResponse{Status: "FAILED", ErrorCode: "MNO_REJECTED"}, errors.New(mnoResp.Message)
+	}
+
 	utils.LogAuditEvent(app, "merchant_service", "disbursement.completed", map[string]interface{}{
 		"transaction_ref": req.TransactionRef,
 		"client_id":       req.ClientID,
+		"merchant_id":     merchantID,
 		"amount":          req.Amount,
 		"phone_number":    req.PhoneNumber,
 	})
 
-	return &DisburseResponse{TransactionRef: req.TransactionRef, Status: "COMPLETED"}, nil
+	return &DisburseResponse{TransactionRef: req.TransactionRef, Status: "PROCESSING"}, nil
 }
 
 func computeHMAC(message string, secret string) string {
@@ -451,9 +606,16 @@ func HandleCollectionCheckStatus(app *global.App, req *CheckStatusRequest) (*Che
 
 func HandleCollectionCheckBalance(app *global.App, req *CheckCollectionBalanceRequest) (*CheckCollectionBalanceResponse, error) {
 
+	//Get merchant ID from client ID
+	var mApiKey merchantapikeys.MerchantAPIKey
+	err := app.DB.Where("client_id = ?", req.ClientID).First(&mApiKey).Error
+	if err != nil {
+		return nil, fmt.Errorf("this client_id is not associated with any merchant: %v", err)
+	}
+
 	///Forward to transactions service via RabbitMQ
 	balancePayload := map[string]interface{}{
-		"client_id": req.ClientID,
+		"merchant_id": mApiKey.MerchantID,
 	}
 
 	responseBytes, err := app.MQ.Request(
@@ -554,4 +716,26 @@ func HandleDisbursementCheckBalance(app *global.App, req *CheckDisbursementBalan
 	}
 
 	return &response, nil
+}
+
+func getProviderFromPhoneNumber(phoneNumber string) string {
+	if len(phoneNumber) < 5 {
+		return "Invalid phone number"
+	}
+
+	prefix := phoneNumber[:5]
+
+	switch prefix {
+	case "26096", "26076":
+		return "mtn"
+
+	case "26097", "26077", "26057":
+		return "airtel"
+
+	case "26095", "26075":
+		return "zamtel"
+
+	default:
+		return "Unsupported Provider for " + phoneNumber
+	}
 }

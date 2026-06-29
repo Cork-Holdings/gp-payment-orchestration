@@ -23,10 +23,7 @@ func CreateMerchantPaymentChannel(req *merchant_payment_channels_proto.CreateMer
 	if err != nil {
 		return err
 	}
-	approvedBy, err := uuid.Parse(req.ApprovedBy)
-	if err != nil {
-		return err
-	}
+
 	merchantPaymentChannel := MerchantPaymentChannel{
 		ID:               uuid.New(),
 		MerchantID:       merchantID,
@@ -34,7 +31,6 @@ func CreateMerchantPaymentChannel(req *merchant_payment_channels_proto.CreateMer
 		Status:           req.Status,
 		RejectionReason:  req.RejectionReason,
 		AssignedBy:       assignedBy,
-		ApprovedBy:       approvedBy,
 		ApprovalStatus:   "pending",
 	}
 

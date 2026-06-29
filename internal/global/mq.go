@@ -49,7 +49,7 @@ func GetMQ() *rmq {
 		// ch.QueueBind(q.Name, "auth.*", os.Getenv("EXCHANGE"), false, nil)
 		// ch.QueueBind(q.Name, "collection.*", os.Getenv("EXCHANGE"), false, nil)
 		// ch.QueueBind(q.Name, "disbursement.*", os.Getenv("EXCHANGE"), false, nil)
-		
+
 		// Declare exclusive, auto-delete queue for responses unique to this worker connection instance
 		qResp, err := ch.QueueDeclare(
 			"",    // Let RabbitMQ generate a completely unique queue name
@@ -126,7 +126,7 @@ func (r *rmq) Request(event string, data any) ([]byte, error) {
 	case res := <-ch:
 		return res, nil
 
-	case <-time.After(10 * time.Second):
+	case <-time.After(60 * time.Second):
 		return nil, fmt.Errorf("timeout")
 	}
 }

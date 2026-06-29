@@ -3,38 +3,59 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 
-	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantapikeys"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/proto/merchant_api_keys_proto"
 	"github.com/Cork-Holdings/gp_payment_orchestration/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/rabbitmq/amqp091-go"
 )
 
-func CreateMerchantAPIKeyHandler() {
+// func CreateMerchantAPIKeyHandler() {
 
-	merchantID := ""
-	//listen on rabbitmq queue for merchantID
-	err := global.GetMQ().Consume(global.New(), os.Getenv("QUEUE_NAME"), func(app *global.App, msg amqp091.Delivery) error {
-		merchantID = string(msg.Body)
-		return nil
-	})
-	if err != nil {
-		log.Printf("Failed to consume merchantID: %v", err)
+// 	merchantID := ""
+// 	//listen on rabbitmq queue for merchantID
+// 	err := global.GetMQ().Consume(global.New(), os.Getenv("QUEUE_NAME"), func(app *global.App, msg amqp091.Delivery) error {
+// 		merchantID = string(msg.Body)
+// 		return nil
+// 	})
+// 	if err != nil {
+// 		log.Printf("Failed to consume merchantID: %v", err)
+// 		return
+// 	}
+
+// 	//Generate API Keys
+// 	merchant, err := merchantapikeys.CreateMerchantKeys(merchantID)
+// 	if err != nil {
+// 		log.Printf("Failed to create merchant API keys: %v", err)
+// 		return
+// 	}
+
+// 	global.GetMQ().Emit("merchant_api_key.created", merchant)
+// }
+
+func CreateMerchantAPIKeysHandler(c *gin.Context) {
+
+	var req struct {
+		MerchantID string `json:"merchant_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("Failed to bind JSON: %v", err)
+		utils.RespondWithError(c, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
 	//Generate API Keys
-	merchant, err := merchantapikeys.CreateMerchantKeys(merchantID)
+	merchant, err := merchantapikeys.CreateMerchantKeys(req.MerchantID)
 	if err != nil {
 		log.Printf("Failed to create merchant API keys: %v", err)
+		utils.RespondWithError(c, http.StatusInternalServerError, "Failed to create merchant API keys")
 		return
 	}
 
-	global.GetMQ().Emit("merchant_api_key.created", merchant)
+	// global.GetMQ().Emit("merchant_api_key.created", merchant)
+	utils.RespondWithSuccess(c, "Merchant API keys created successfully", gin.H{"data": merchant})
 }
 
 func GetMerchantAPIKeysHandler(c *gin.Context) {
