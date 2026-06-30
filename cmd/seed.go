@@ -13,6 +13,7 @@ var seedCmd = &cobra.Command{
 	Short: "Seed the database with initial data",
 	Run: func(cmd *cobra.Command, args []string) {
 		app := global.New()
+		RegisterAppModels(app)
 		if err := seeders.Seed(app.DB); err != nil {
 			log.Fatalf("Failed to seed database: %v", err)
 		}

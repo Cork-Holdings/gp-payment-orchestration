@@ -5,15 +5,41 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/api"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/database/seeders"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/mq"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/tasks"
 	"github.com/spf13/cobra"
 )
+
+func envBool(keys ...string) bool {
+	for _, key := range keys {
+		val := strings.TrimSpace(os.Getenv(key))
+		if val == "" {
+			continue
+		}
+
+		parsed, err := strconv.ParseBool(strings.ToLower(val))
+		if err == nil {
+			return parsed
+		}
+
+		switch strings.ToLower(val) {
+		case "yes", "y", "on":
+			return true
+		case "no", "n", "off":
+			return false
+		}
+	}
+
+	return false
+}
 
 var serveCmd = &cobra.Command{
 	Use:   "serve",
@@ -23,6 +49,28 @@ var serveCmd = &cobra.Command{
 		log.Println("Starting api gateway")
 
 		app := global.New()
+		RegisterAppModels(app)
+
+		shouldReset := envBool("RESET", "reset")
+		shouldSeed := shouldReset || envBool("SEED", "seed")
+
+		if shouldReset {
+			log.Println("RESET=true detected. Resetting Postgres schema and Mongo database...")
+			if err := seeders.ResetDatabases(app); err != nil {
+				log.Fatalf("failed to reset data stores: %v", err)
+			}
+
+			// Re-apply schema after reset.
+			app.Models = nil
+			RegisterAppModels(app)
+		}
+
+		if shouldSeed {
+			log.Println("Seeding enabled via environment variable")
+			if err := seeders.Seed(app.DB); err != nil {
+				log.Fatalf("failed to seed database: %v", err)
+			}
+		}
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()

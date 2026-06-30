@@ -275,16 +275,10 @@ func Seed(db *gorm.DB) error {
 		}
 		db.Create(&subscriptions.MerchantSubscription{ID: uuid.New(), MerchantID: mID, SubscriptionID: subMM.ID, Status: "active"})
 
-		// 9. Seed API Keys and IPs for each merchant
-		clientID := "client_" + mID.String()[:8]
-		clientSecret := "secret_" + mID.String()[:8]
-		db.Create(&merchantapikeys.MerchantAPIKey{
-			ID:           uuid.New(),
-			MerchantID:   mID,
-			ClientID:     clientID,
-			ClientSecret: clientSecret,
-			Status:       "active",
-		})
+		// 9. Seed API Keys and provision merchant accounts in transactions service.
+		if _, err := merchantapikeys.CreateMerchantKeys(mID.String()); err != nil {
+			return err
+		}
 
 		db.Create(&merchantips.MerchantIP{
 			ID:          uuid.New(),
