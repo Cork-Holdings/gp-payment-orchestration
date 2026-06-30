@@ -287,7 +287,7 @@ func Seed(db *gorm.DB) error {
 			Status:      "approved",
 			SubmittedBy: mID,
 		})
-		// Also add IPv6 localhost for local testings
+		// Also add IPv6 localhost for local testing
 		db.Create(&merchantips.MerchantIP{
 			ID:          uuid.New(),
 			MerchantID:  mID,
