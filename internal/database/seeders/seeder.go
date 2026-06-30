@@ -288,6 +288,7 @@ func Seed(db *gorm.DB) error {
 			SubmittedBy: mID,
 		})
 		// Also add IPv6 localhost for local testing
+		//Testing webhook
 		db.Create(&merchantips.MerchantIP{
 			ID:          uuid.New(),
 			MerchantID:  mID,
