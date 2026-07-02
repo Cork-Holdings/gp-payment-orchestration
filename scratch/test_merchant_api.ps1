@@ -42,7 +42,7 @@ try {
         client_secret = "wrong_secret"
     }
     $res = Invoke-RestMethod -Uri "$GatewayURL/oauth/token" -Method Post -Body $badTokenBody
-    Write-Host "FAILED: Expected token generation to fail, but it succeeded!" -ForegroundColor Red
+    Write-Host "failed: Expected token generation to fail, but it succeeded!" -ForegroundColor Red
 } catch {
     $status = $_.Exception.Response.StatusCode.value__
     if ($status -eq 401) {
@@ -91,7 +91,7 @@ try {
     }
 
     $res = Invoke-RestMethod -Uri "$GatewayURL/api/v1/mobile-money/collect" -Method Post -Body $badPhoneBody -ContentType "application/json" -Headers $headers
-    Write-Host "FAILED: Accepted invalid phone number!" -ForegroundColor Red
+    Write-Host "failed: Accepted invalid phone number!" -ForegroundColor Red
 } catch {
     $status = $_.Exception.Response.StatusCode.value__
     if ($status -eq 400) {
@@ -118,7 +118,7 @@ try {
     }
 
     $res = Invoke-RestMethod -Uri "$GatewayURL/api/v1/mobile-money/collect" -Method Post -Body $collectBody -ContentType "application/json" -Headers $headers
-    Write-Host "FAILED: Allowed request from unapproved IP address!" -ForegroundColor Red
+    Write-Host "failed: Allowed request from unapproved IP address!" -ForegroundColor Red
 } catch {
     $status = $_.Exception.Response.StatusCode.value__
     if ($status -eq 401) {
@@ -174,7 +174,7 @@ try {
     }
 
     $res = Invoke-RestMethod -Uri "$GatewayURL/api/v1/mobile-money/disburse" -Method Post -Body $disburseBody -ContentType "application/json" -Headers $headers
-    Write-Host "FAILED: Approved disbursement with invalid signature!" -ForegroundColor Red
+    Write-Host "failed: Approved disbursement with invalid signature!" -ForegroundColor Red
 } catch {
     $status = $_.Exception.Response.StatusCode.value__
     if ($status -eq 400) {
@@ -204,7 +204,7 @@ try {
     }
 
     $res = Invoke-RestMethod -Uri "$GatewayURL/api/v1/mobile-money/disburse" -Method Post -Body $disburseBody -ContentType "application/json" -Headers $headers
-    Write-Host "FAILED: Approved disbursement with insufficient balance!" -ForegroundColor Red
+    Write-Host "failed: Approved disbursement with insufficient balance!" -ForegroundColor Red
 } catch {
     $status = $_.Exception.Response.StatusCode.value__
     if ($status -eq 400) {

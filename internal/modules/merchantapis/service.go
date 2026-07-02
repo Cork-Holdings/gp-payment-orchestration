@@ -222,7 +222,7 @@ type CollectResponse struct {
 	Data    interface{} `json:"data"`
 }
 
-// HandleCollect initiates an async collection, transitioning PENDING -> PROCESSING
+// HandleCollect initiates an async collection, transitioning pending -> PROCESSING
 func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 	if len(req.PhoneNumber) < 12 {
 		return &CollectResponse{
@@ -317,7 +317,7 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 		"amount":                 req.Amount,
 		"transaction_ref":        req.TransactionRef,
 		"type":                   "MNO_COLLECTION",
-		"status":                 "PENDING",
+		"status":                 "pending",
 		"fee_calculation":        feeResult,
 		"transaction_fee_amount": feeResult.TransactionFeeAmount,
 		"provider_fee_amount":    feeResult.ProviderFeeAmount,
@@ -452,7 +452,7 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 	var mApiKey merchantapikeys.MerchantAPIKey
 	err := app.DB.Where("client_id = ?", req.ClientID).First(&mApiKey).Error
 	if err != nil {
-		return &DisburseResponse{Status: "FAILED", ErrorCode: "MERCHANT_NOT_FOUND"}, err
+		return &DisburseResponse{Status: "failed", ErrorCode: "MERCHANT_NOT_FOUND"}, err
 	}
 
 	// Verify Auth Signature against request tampering
@@ -464,14 +464,14 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 	//Decrypt the Pin from the database
 	encryptionKey := []byte(os.Getenv("ENCRYPTION_KEY"))
 	if len(encryptionKey) == 0 {
-		return &DisburseResponse{Status: "FAILED", ErrorCode: "ENCRYPTION_KEY_NOT_SET"}, errors.New("ENCRYPTION_KEY not set")
+		return &DisburseResponse{Status: "failed", ErrorCode: "ENCRYPTION_KEY_NOT_SET"}, errors.New("ENCRYPTION_KEY not set")
 	}
 
 	pin := mApiKey.Pin
 
 	decryptedPin, err := utils.Decrypt(pin, encryptionKey)
 	if err != nil {
-		return &DisburseResponse{Status: "FAILED", ErrorCode: "PIN_DECRYPTION_FAILED"}, err
+		return &DisburseResponse{Status: "failed", ErrorCode: "PIN_DECRYPTION_failed"}, err
 	}
 
 	message := fmt.Sprintf("%s:%s", clientID, decryptedPin)
@@ -482,7 +482,7 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 	expectedSig := hex.EncodeToString(signature.Sum(nil))
 
 	if !strings.EqualFold(expectedSig, req.Signature) {
-		return &DisburseResponse{Status: "FAILED", ErrorCode: "INVALID_SIGNATURE"}, errors.New("invalid signature")
+		return &DisburseResponse{Status: "failed", ErrorCode: "INVALID_SIGNATURE"}, errors.New("invalid signature")
 	}
 
 	merchantID := mApiKey.MerchantID.String()
@@ -492,7 +492,7 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 		"amount":      req.Amount,
 	})
 	if err != nil {
-		return &DisburseResponse{Status: "FAILED", ErrorCode: "BALANCE_CHECK_FAILED"}, fmt.Errorf("failed to check merchant float balance: %w", err)
+		return &DisburseResponse{Status: "failed", ErrorCode: "BALANCE_CHECK_failed"}, fmt.Errorf("failed to check merchant float balance: %w", err)
 	}
 
 	var balanceResp struct {
@@ -501,14 +501,14 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 		Message string `json:"message"`
 	}
 	if err := json.Unmarshal(balanceRespBytes, &balanceResp); err != nil {
-		return &DisburseResponse{Status: "FAILED", ErrorCode: "BALANCE_CHECK_FAILED"}, fmt.Errorf("invalid balance response payload: %w", err)
+		return &DisburseResponse{Status: "failed", ErrorCode: "BALANCE_CHECK_failed"}, fmt.Errorf("invalid balance response payload: %w", err)
 	}
 
 	if balanceResp.Code != 200 {
 		if balanceResp.Message == "" {
 			balanceResp.Message = "insufficient float balance"
 		}
-		return &DisburseResponse{Status: "FAILED", ErrorCode: "INSUFFICIENT_FLOAT_BALANCE"}, errors.New(balanceResp.Message)
+		return &DisburseResponse{Status: "failed", ErrorCode: "INSUFFICIENT_FLOAT_BALANCE"}, errors.New(balanceResp.Message)
 	}
 
 	feeResult, err := feecalculator.CalculateFees(
@@ -521,7 +521,7 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 		if feeResult.Error == "" {
 			feeResult.Error = err.Error()
 		}
-		return &DisburseResponse{Status: "FAILED", ErrorCode: "FEE_CALCULATION_FAILED"}, errors.New(feeResult.Error)
+		return &DisburseResponse{Status: "failed", ErrorCode: "FEE_CALCULATION_failed"}, errors.New(feeResult.Error)
 	}
 
 	transactionPayload := map[string]any{
@@ -531,7 +531,7 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 		"amount":                 req.Amount,
 		"transaction_ref":        req.TransactionRef,
 		"type":                   "MNO_DISBURSEMENT",
-		"status":                 "PENDING",
+		"status":                 "pending",
 		"fee_calculation":        feeResult,
 		"transaction_fee_amount": feeResult.TransactionFeeAmount,
 		"provider_fee_amount":    feeResult.ProviderFeeAmount,
@@ -543,12 +543,12 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 	}
 
 	if _, err := app.MQ.Request("transactions.create", transactionPayload); err != nil {
-		return &DisburseResponse{Status: "FAILED", ErrorCode: "TRANSACTION_CREATE_FAILED"}, fmt.Errorf("failed to create disbursement transaction: %w", err)
+		return &DisburseResponse{Status: "failed", ErrorCode: "TRANSACTION_CREATE_failed"}, fmt.Errorf("failed to create disbursement transaction: %w", err)
 	}
 
 	provider := getProviderFromPhoneNumber(req.PhoneNumber)
 	if provider == "Unsupported Provider for "+req.PhoneNumber {
-		return &DisburseResponse{Status: "FAILED", ErrorCode: "UNSUPPORTED_PROVIDER"}, errors.New(provider)
+		return &DisburseResponse{Status: "failed", ErrorCode: "UNSUPPORTED_PROVIDER"}, errors.New(provider)
 	}
 
 	mnoPayload := map[string]any{
@@ -562,7 +562,7 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 
 	mnoRespBytes, err := app.MQ.Request("mno.disbursement.requests", mnoPayload)
 	if err != nil {
-		return &DisburseResponse{Status: "FAILED", ErrorCode: "MNO_REQUEST_FAILED"}, fmt.Errorf("failed to forward disbursement to mno service: %w", err)
+		return &DisburseResponse{Status: "failed", ErrorCode: "MNO_REQUEST_failed"}, fmt.Errorf("failed to forward disbursement to mno service: %w", err)
 	}
 
 	var mnoResp struct {
@@ -571,14 +571,14 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 		Message string `json:"message"`
 	}
 	if err := json.Unmarshal(mnoRespBytes, &mnoResp); err != nil {
-		return &DisburseResponse{Status: "FAILED", ErrorCode: "MNO_RESPONSE_INVALID"}, fmt.Errorf("failed to parse mno response: %w", err)
+		return &DisburseResponse{Status: "failed", ErrorCode: "MNO_RESPONSE_INVALID"}, fmt.Errorf("failed to parse mno response: %w", err)
 	}
 
 	if mnoResp.Code != 200 {
 		if mnoResp.Message == "" {
 			mnoResp.Message = "mno service rejected disbursement"
 		}
-		return &DisburseResponse{Status: "FAILED", ErrorCode: "MNO_REJECTED"}, errors.New(mnoResp.Message)
+		return &DisburseResponse{Status: "failed", ErrorCode: "MNO_REJECTED"}, errors.New(mnoResp.Message)
 	}
 
 	utils.LogAuditEvent(app, "merchant_service", "disbursement.completed", map[string]interface{}{
