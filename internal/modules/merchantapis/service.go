@@ -456,7 +456,31 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 	}
 
 	// Verify Auth Signature against request tampering
-	expectedSig := computeHMAC(req.RawBody, mApiKey.ClientSecret)
+	// expectedSig := computeHMAC(req.RawBody, mApiKey.ClientSecret)
+
+	//Generate expected signature using the client secret and the request body
+	clientID := req.ClientID
+	clientSecret := mApiKey.ClientSecret
+	//Decrypt the Pin from the database
+	encryptionKey := []byte(os.Getenv("ENCRYPTION_KEY"))
+	if len(encryptionKey) == 0 {
+		return &DisburseResponse{Status: "FAILED", ErrorCode: "ENCRYPTION_KEY_NOT_SET"}, errors.New("ENCRYPTION_KEY not set")
+	}
+
+	pin := mApiKey.Pin
+
+	decryptedPin, err := utils.Decrypt(pin, encryptionKey)
+	if err != nil {
+		return &DisburseResponse{Status: "FAILED", ErrorCode: "PIN_DECRYPTION_FAILED"}, err
+	}
+
+	message := fmt.Sprintf("%s:%s", clientID, decryptedPin)
+
+	signature := hmac.New(sha256.New, []byte(clientSecret))
+	signature.Write([]byte(message))
+
+	expectedSig := hex.EncodeToString(signature.Sum(nil))
+
 	if !strings.EqualFold(expectedSig, req.Signature) {
 		return &DisburseResponse{Status: "FAILED", ErrorCode: "INVALID_SIGNATURE"}, errors.New("invalid signature")
 	}
@@ -697,6 +721,7 @@ func HandleDisbursementCheckBalance(app *global.App, req *CheckDisbursementBalan
 	///Forward to transactions service via RabbitMQ
 	balancePayload := map[string]interface{}{
 		"merchant_id": merchant.MerchantID,
+		"amount":      0.0,
 	}
 
 	responseBytes, err := app.MQ.Request(

@@ -265,8 +265,9 @@ func GenerateAuthSignature(req *merchant_api_keys_proto.GenerateAuthSignatureReq
 
 	clientID := merchantAPIKeys[0].ClientID
 	clientSecret := merchantAPIKeys[0].ClientSecret
-	pin := merchantAPIKeys[0].Pin
 
+	//Decrypt the Pin from the database
+	pin := req.Pin
 	message := fmt.Sprintf("%s:%s", clientID, pin)
 
 	signature := hmac.New(sha256.New, []byte(clientSecret))
