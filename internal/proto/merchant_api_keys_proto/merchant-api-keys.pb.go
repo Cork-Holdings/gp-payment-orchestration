@@ -417,6 +417,58 @@ func (x *GenerateAuthSignatureRequest) GetPin() string {
 	return ""
 }
 
+type SetPinRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MerchantId    string                 `protobuf:"bytes,1,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
+	Pin           string                 `protobuf:"bytes,2,opt,name=pin,proto3" json:"pin,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetPinRequest) Reset() {
+	*x = SetPinRequest{}
+	mi := &file_merchant_api_keys_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetPinRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetPinRequest) ProtoMessage() {}
+
+func (x *SetPinRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_merchant_api_keys_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetPinRequest.ProtoReflect.Descriptor instead.
+func (*SetPinRequest) Descriptor() ([]byte, []int) {
+	return file_merchant_api_keys_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *SetPinRequest) GetMerchantId() string {
+	if x != nil {
+		return x.MerchantId
+	}
+	return ""
+}
+
+func (x *SetPinRequest) GetPin() string {
+	if x != nil {
+		return x.Pin
+	}
+	return ""
+}
+
 var File_merchant_api_keys_proto protoreflect.FileDescriptor
 
 const file_merchant_api_keys_proto_rawDesc = "" +
@@ -459,7 +511,11 @@ const file_merchant_api_keys_proto_rawDesc = "" +
 	"merchantId\x12\x1b\n" +
 	"\tclient_id\x18\x02 \x01(\tR\bclientId\x12#\n" +
 	"\rclient_secret\x18\x03 \x01(\tR\fclientSecret\x12\x10\n" +
-	"\x03pin\x18\x04 \x01(\tR\x03pinB8Z6/proto/merchant_api_keys_proto;merchant_api_keys_protob\x06proto3"
+	"\x03pin\x18\x04 \x01(\tR\x03pin\"B\n" +
+	"\rSetPinRequest\x12\x1f\n" +
+	"\vmerchant_id\x18\x01 \x01(\tR\n" +
+	"merchantId\x12\x10\n" +
+	"\x03pin\x18\x02 \x01(\tR\x03pinB8Z6/proto/merchant_api_keys_proto;merchant_api_keys_protob\x06proto3"
 
 var (
 	file_merchant_api_keys_proto_rawDescOnce sync.Once
@@ -473,13 +529,14 @@ func file_merchant_api_keys_proto_rawDescGZIP() []byte {
 	return file_merchant_api_keys_proto_rawDescData
 }
 
-var file_merchant_api_keys_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_merchant_api_keys_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_merchant_api_keys_proto_goTypes = []any{
 	(*MerchantAPIKey)(nil),               // 0: merchant_api_keys_proto.MerchantAPIKey
 	(*GetMerchantAPIKeysRequest)(nil),    // 1: merchant_api_keys_proto.GetMerchantAPIKeysRequest
 	(*GetMerchantAPIKeysResponse)(nil),   // 2: merchant_api_keys_proto.GetMerchantAPIKeysResponse
 	(*EditMerchantAPIKeyRequest)(nil),    // 3: merchant_api_keys_proto.EditMerchantAPIKeyRequest
 	(*GenerateAuthSignatureRequest)(nil), // 4: merchant_api_keys_proto.GenerateAuthSignatureRequest
+	(*SetPinRequest)(nil),                // 5: merchant_api_keys_proto.SetPinRequest
 }
 var file_merchant_api_keys_proto_depIdxs = []int32{
 	0, // 0: merchant_api_keys_proto.GetMerchantAPIKeysResponse.merchant_api_keys:type_name -> merchant_api_keys_proto.MerchantAPIKey
@@ -501,7 +558,7 @@ func file_merchant_api_keys_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_merchant_api_keys_proto_rawDesc), len(file_merchant_api_keys_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

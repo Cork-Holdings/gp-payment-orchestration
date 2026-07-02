@@ -119,3 +119,17 @@ func GenerateAuthSignatureHandler(c *gin.Context) {
 	}
 	utils.RespondWithSuccess(c, "Auth signature generated successfully", gin.H{"signature": signature})
 }
+
+func SetPinHandler(c *gin.Context) {
+	var req merchant_api_keys_proto.SetPinRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.RespondWithError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	err := merchantapikeys.SetPin(&req)
+	if err != nil {
+		utils.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.RespondWithSuccess(c, "Pin set successfully", nil)
+}

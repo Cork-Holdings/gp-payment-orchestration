@@ -125,6 +125,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 		merchantApiKeyRoutes.PUT("/update", handlers.UpdateMerchantAPIKeyHandler)
 		merchantApiKeyRoutes.DELETE("/delete/:id", handlers.DeleteMerchantAPIKeyHandler)
 		merchantApiKeyRoutes.POST("/generate-auth-signature", handlers.GenerateAuthSignatureHandler)
+		merchantApiKeyRoutes.POST("/set-pin", handlers.SetPinHandler)
 	}
 
 	merchantIpRoutes := e.Group("/merchant-ips")

@@ -6,6 +6,7 @@ import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantapikeys"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantfeeprofiles"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantips"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantpaymentchannels"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentchannels"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentservices"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/prefixes"
@@ -26,6 +27,7 @@ func RegisterAppModels(app *global.App) {
 		&paymentservices.PaymentService{},
 		&paymentchannels.PaymentChannel{},
 		&paymentchannels.ChannelFeeBands{},
+		&merchantpaymentchannels.MerchantPaymentChannel{},
 		&transactiontypes.TransactionType{},
 		&transactiontypes.SubTransactionType{},
 		&merchantfeeprofiles.MerchantFeeProfile{},

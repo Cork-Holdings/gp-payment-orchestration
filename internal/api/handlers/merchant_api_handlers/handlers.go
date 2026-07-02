@@ -5,10 +5,8 @@ import (
 	"regexp"
 
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
-	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantapikeys"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantapis"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 func HandleGenerateTokenHandler(c *gin.Context) {
@@ -223,22 +221,22 @@ func HandleCreateCheckoutSessionHandler(c *gin.Context) {
 
 }
 
-func HandleCreateDummyMerchantHandler(c *gin.Context) {
-	merchantID := uuid.NewString()
+// func HandleCreateDummyMerchantHandler(c *gin.Context) {
+// 	merchantID := uuid.NewString()
 
-	merchantKey, err := merchantapikeys.CreateMerchantKeys(merchantID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+// 	merchantKey, err := merchantapikeys.CreateMerchantKeys(merchantID)
+// 	if err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message":       "Dummy merchant created successfully",
-		"merchant_id":   merchantID,
-		"client_id":     merchantKey.ClientID,
-		"client_secret": merchantKey.ClientSecret,
-	})
-}
+// 	c.JSON(http.StatusCreated, gin.H{
+// 		"message":       "Dummy merchant created successfully",
+// 		"merchant_id":   merchantID,
+// 		"client_id":     merchantKey.ClientID,
+// 		"client_secret": merchantKey.ClientSecret,
+// 	})
+// }
 
 // func HandleGetMerchantAccountsHandler(c *gin.Context) {
 // 	app := global.New()

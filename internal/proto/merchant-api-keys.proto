@@ -56,3 +56,8 @@ message GenerateAuthSignatureRequest {
     string client_secret = 3;
     string pin = 4;
 }
+
+message SetPinRequest {
+    string merchant_id = 1;
+    string pin = 2;
+}

@@ -14,7 +14,7 @@ import (
 func RegisterMerchantRoutes(e *gin.Engine, app *global.App) {
 	// 1. OAuth Token Generation (Public, urlencoded, rate limited by IP)
 	e.POST("/oauth/token", middleware.IPRateLimiter(app), merchantapihandlers.HandleGenerateTokenHandler)
-	e.POST("/sandbox/dummy-merchant", middleware.IPRateLimiter(app), merchantapihandlers.HandleCreateDummyMerchantHandler)
+	// e.POST("/sandbox/dummy-merchant", middleware.IPRateLimiter(app), merchantapihandlers.HandleCreateDummyMerchantHandler)
 
 	// 2. Protected Merchant Endpoints
 	verifyClient := &directVerifyClient{app: app}

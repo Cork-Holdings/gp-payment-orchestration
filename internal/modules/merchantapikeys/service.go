@@ -243,9 +243,20 @@ func GenerateAuthSignature(req *merchant_api_keys_proto.GenerateAuthSignatureReq
 		}
 	}
 
+	//Decrypt the Pin from the database
+	encryptionKey := []byte(os.Getenv("ENCRYPTION_KEY"))
+	if len(encryptionKey) == 0 {
+		return "", errors.New("ENCRYPTION_KEY not set")
+	}
+
+	decryptedPIN, err := utils.Decrypt(merchantAPIKeys[0].Pin, encryptionKey)
+	if err != nil {
+		return "", err
+	}
+
 	//If Pin exists check if it is correct
 	if merchantAPIKeys[0].Pin != "" {
-		if merchantAPIKeys[0].Pin != req.Pin {
+		if decryptedPIN != req.Pin {
 			return "", errors.New("invalid pin")
 		}
 	}
@@ -269,4 +280,53 @@ func GenerateAuthSignature(req *merchant_api_keys_proto.GenerateAuthSignatureReq
 	}
 
 	return signatureString, nil
+}
+
+func SetPin(req *merchant_api_keys_proto.SetPinRequest) error {
+
+	parsedMerchantID, err := uuid.Parse(req.MerchantId)
+	if err != nil {
+		return err
+	}
+
+	// Encrypt the Pin
+	encryptionKey := []byte(os.Getenv("ENCRYPTION_KEY"))
+	if len(encryptionKey) == 0 {
+		return errors.New("ENCRYPTION_KEY not set")
+	}
+
+	//Ensure Pin is not empty
+	if req.Pin == "" {
+		return errors.New("pin cannot be empty")
+	}
+
+	//Ensure pin is at least 8 characters long
+	if len(req.Pin) < 8 {
+		return errors.New("pin must be at least 8 characters long")
+	}
+
+	ePIN, err := utils.Encrypt(req.Pin, encryptionKey)
+	if err != nil {
+		return err
+	}
+
+	tx := global.GetDB().Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
+
+	if err := global.GetDB().Model(&MerchantAPIKey{}).Where("merchant_id = ?", parsedMerchantID).Updates(map[string]interface{}{"pin": ePIN}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
 }

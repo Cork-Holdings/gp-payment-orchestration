@@ -188,6 +188,8 @@ func Seed(db *gorm.DB) error {
 				PaymentChannelID: c.ID,
 				Status:           "active",
 				ApprovalStatus:   "approved",
+				AssignedBy:       uuid.New(),
+				ApprovedBy:       uuid.New(),
 			})
 
 			// Create a fee profile for each merchant for each channel
