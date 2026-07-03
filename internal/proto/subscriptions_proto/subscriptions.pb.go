@@ -227,7 +227,7 @@ func (x *GetSubscriptionsRequest) GetSearchQuery() string {
 
 type GetSubscriptionsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Subscriptions []*Subscription        `protobuf:"bytes,1,rep,name=subscriptions,proto3" json:"subscriptions,omitempty"`                 // List of subscriptions
+	Subscription  []*Subscription        `protobuf:"bytes,1,rep,name=subscription,proto3" json:"subscription,omitempty"`                   // List of subscriptions
 	TotalPages    int32                  `protobuf:"varint,2,opt,name=total_pages,json=totalPages,proto3" json:"total_pages,omitempty"`    // Total number of pages
 	CurrentPage   int32                  `protobuf:"varint,3,opt,name=current_page,json=currentPage,proto3" json:"current_page,omitempty"` // Current page
 	HasMore       bool                   `protobuf:"varint,4,opt,name=has_more,json=hasMore,proto3" json:"has_more,omitempty"`             // Whether there are more pages
@@ -265,9 +265,9 @@ func (*GetSubscriptionsResponse) Descriptor() ([]byte, []int) {
 	return file_subscriptions_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetSubscriptionsResponse) GetSubscriptions() []*Subscription {
+func (x *GetSubscriptionsResponse) GetSubscription() []*Subscription {
 	if x != nil {
-		return x.Subscriptions
+		return x.Subscription
 	}
 	return nil
 }
@@ -782,9 +782,9 @@ const file_subscriptions_proto_rawDesc = "" +
 	"\x17GetSubscriptionsRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12!\n" +
-	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\"\xc2\x01\n" +
-	"\x18GetSubscriptionsResponse\x12G\n" +
-	"\rsubscriptions\x18\x01 \x03(\v2!.subscriptions_proto.SubscriptionR\rsubscriptions\x12\x1f\n" +
+	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\"\xc0\x01\n" +
+	"\x18GetSubscriptionsResponse\x12E\n" +
+	"\fsubscription\x18\x01 \x03(\v2!.subscriptions_proto.SubscriptionR\fsubscription\x12\x1f\n" +
 	"\vtotal_pages\x18\x02 \x01(\x05R\n" +
 	"totalPages\x12!\n" +
 	"\fcurrent_page\x18\x03 \x01(\x05R\vcurrentPage\x12\x19\n" +
@@ -858,7 +858,7 @@ var file_subscriptions_proto_goTypes = []any{
 	(*DeleteMerchantSubscriptionRequest)(nil), // 10: subscriptions_proto.DeleteMerchantSubscriptionRequest
 }
 var file_subscriptions_proto_depIdxs = []int32{
-	1, // 0: subscriptions_proto.GetSubscriptionsResponse.subscriptions:type_name -> subscriptions_proto.Subscription
+	1, // 0: subscriptions_proto.GetSubscriptionsResponse.subscription:type_name -> subscriptions_proto.Subscription
 	6, // 1: subscriptions_proto.GetMerchantSubscriptionsResponse.merchant_subscriptions:type_name -> subscriptions_proto.MerchantSubscription
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type

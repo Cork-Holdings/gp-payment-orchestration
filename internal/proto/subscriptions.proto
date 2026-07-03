@@ -29,7 +29,7 @@ message GetSubscriptionsRequest {
 }
 
 message GetSubscriptionsResponse {
-    repeated Subscription subscriptions = 1;       // List of subscriptions
+    repeated Subscription subscription = 1;       // List of subscriptions
     int32 total_pages = 2;         // Total number of pages
     int32 current_page = 3;        // Current page
     bool has_more = 4;             // Whether there are more pages

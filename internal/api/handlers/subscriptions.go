@@ -59,7 +59,7 @@ func GetSubscriptionsHandler(c *gin.Context) {
 	}
 
 	utils.RespondWithSuccess(c, "Subscriptions fetched successfully", gin.H{
-		"subscriptions": data,
+		"data": data,
 	})
 }
 

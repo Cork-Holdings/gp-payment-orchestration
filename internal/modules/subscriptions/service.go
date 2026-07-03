@@ -79,10 +79,10 @@ func GetSubscriptions(req *subscriptions_proto.GetSubscriptionsRequest) (*subscr
 	}
 
 	return &subscriptions_proto.GetSubscriptionsResponse{
-		Subscriptions: subRes,
-		TotalPages:    totalPages,
-		CurrentPage:   req.Page,
-		HasMore:       req.Page < totalPages,
+		Subscription: subRes,
+		TotalPages:   totalPages,
+		CurrentPage:  req.Page,
+		HasMore:      req.Page < totalPages,
 	}, nil
 }
 
