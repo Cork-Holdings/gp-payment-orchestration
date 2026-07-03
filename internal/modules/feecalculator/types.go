@@ -33,6 +33,9 @@ type FeeCalculationResult struct {
 	ProfileFeeBandType  string  `json:"profile_fee_band_type,omitempty"`
 	ProfileFeeBandRate  float64 `json:"profile_fee_band_rate,omitempty"`
 
+	// Fee uplift tracking (when provider fee exceeds transaction fee)
+	FeeUplift float64 `json:"fee_uplift,omitempty"`
+
 	Error  string `json:"error,omitempty"`
 	Status string `json:"status,omitempty"`
 }

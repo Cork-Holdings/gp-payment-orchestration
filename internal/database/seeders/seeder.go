@@ -109,23 +109,27 @@ func Seed(db *gorm.DB) error {
 		channelMap[c.Name] = c.ID
 	}
 
-	// 5. Channel Fee Bands (Provider Fees)
+	// 5. Channel Fee Bands (Provider Fees - MNO costs)
+	// Realistic bands based on industry standards for Airtel, MTN, Zamtel
 	bands := []paymentchannels.ChannelFeeBands{
-		// MTN (Collection)
-		{ID: uuid.New(), Name: "MTN Collection Band 1", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 3000.01, MaxAmount: 5000.00, ChargeAmount: 3.00, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "MTN Collection Band 2", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 1000.01, MaxAmount: 3000.00, ChargeAmount: 2.20, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "MTN Collection Band 3", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 300.01, MaxAmount: 500.00, ChargeAmount: 0.80, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "MTN Collection Band 4", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 150.01, MaxAmount: 300.00, ChargeAmount: 0.90, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "MTN Collection Band 5", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 0.01, MaxAmount: 150.00, ChargeAmount: 0.42, ChargeType: "fixed", Status: "active"},
+		// MTN Collection (tiered fixed bands)
+		{ID: uuid.New(), Name: "MTN Collection 0.01-50", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 0.01, MaxAmount: 50.00, ChargeAmount: 0.50, ChargeType: "fixed", Status: "active"},
+		{ID: uuid.New(), Name: "MTN Collection 50-200", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 50.01, MaxAmount: 200.00, ChargeAmount: 1.00, ChargeType: "fixed", Status: "active"},
+		{ID: uuid.New(), Name: "MTN Collection 200-500", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 200.01, MaxAmount: 500.00, ChargeAmount: 2.00, ChargeType: "fixed", Status: "active"},
+		{ID: uuid.New(), Name: "MTN Collection 500-1000", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 500.01, MaxAmount: 1000.00, ChargeAmount: 3.00, ChargeType: "fixed", Status: "active"},
+		{ID: uuid.New(), Name: "MTN Collection 1000+", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 1000.01, MaxAmount: 0, ChargeAmount: 0.35, ChargeType: "percentage", Status: "active"},
 
-		// Airtel (Collection)
-		{ID: uuid.New(), Name: "Airtel Collection Band 1", PaymentChannelID: channelMap["Airtel (Collection)"], MinAmount: 150.01, MaxAmount: 500.00, ChargeAmount: 1.00, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "Airtel Collection Band 2", PaymentChannelID: channelMap["Airtel (Collection)"], MinAmount: 1000.01, MaxAmount: 3000.00, ChargeAmount: 2.80, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "Airtel Collection Band 3", PaymentChannelID: channelMap["Airtel (Collection)"], MinAmount: 500.01, MaxAmount: 1000.00, ChargeAmount: 1.50, ChargeType: "fixed", Status: "active"},
+		// Airtel Collection (tiered fixed bands)
+		{ID: uuid.New(), Name: "Airtel Collection 0.01-75", PaymentChannelID: channelMap["Airtel (Collection)"], MinAmount: 0.01, MaxAmount: 75.00, ChargeAmount: 0.50, ChargeType: "fixed", Status: "active"},
+		{ID: uuid.New(), Name: "Airtel Collection 75-250", PaymentChannelID: channelMap["Airtel (Collection)"], MinAmount: 75.01, MaxAmount: 250.00, ChargeAmount: 1.20, ChargeType: "fixed", Status: "active"},
+		{ID: uuid.New(), Name: "Airtel Collection 250-750", PaymentChannelID: channelMap["Airtel (Collection)"], MinAmount: 250.01, MaxAmount: 750.00, ChargeAmount: 2.50, ChargeType: "fixed", Status: "active"},
+		{ID: uuid.New(), Name: "Airtel Collection 750+", PaymentChannelID: channelMap["Airtel (Collection)"], MinAmount: 750.01, MaxAmount: 0, ChargeAmount: 0.40, ChargeType: "percentage", Status: "active"},
 
-		// Zamtel (Collection)
-		{ID: uuid.New(), Name: "Zamtel Collection Band 1", PaymentChannelID: channelMap["Zamtel (Collection)"], MinAmount: 150.01, MaxAmount: 300.00, ChargeAmount: 0.89, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "Zamtel Collection Band 2", PaymentChannelID: channelMap["Zamtel (Collection)"], MinAmount: 0.00, MaxAmount: 4.99, ChargeAmount: 0.00, ChargeType: "fixed", Status: "active"},
+		// Zamtel Collection (tiered fixed bands)
+		{ID: uuid.New(), Name: "Zamtel Collection 0.01-100", PaymentChannelID: channelMap["Zamtel (Collection)"], MinAmount: 0.01, MaxAmount: 100.00, ChargeAmount: 0.45, ChargeType: "fixed", Status: "active"},
+		{ID: uuid.New(), Name: "Zamtel Collection 100-300", PaymentChannelID: channelMap["Zamtel (Collection)"], MinAmount: 100.01, MaxAmount: 300.00, ChargeAmount: 1.00, ChargeType: "fixed", Status: "active"},
+		{ID: uuid.New(), Name: "Zamtel Collection 300-1000", PaymentChannelID: channelMap["Zamtel (Collection)"], MinAmount: 300.01, MaxAmount: 1000.00, ChargeAmount: 2.00, ChargeType: "fixed", Status: "active"},
+		{ID: uuid.New(), Name: "Zamtel Collection 1000+", PaymentChannelID: channelMap["Zamtel (Collection)"], MinAmount: 1000.01, MaxAmount: 0, ChargeAmount: 0.30, ChargeType: "percentage", Status: "active"},
 	}
 	if err := db.Create(&bands).Error; err != nil {
 		return err
@@ -211,10 +215,12 @@ func Seed(db *gorm.DB) error {
 						CalculationMode:   "standard",
 					}
 					db.Create(&fp)
-					db.Create(&feeprofiles.ProfileFeeBands{ID: uuid.New(), FeeProfileID: fp.ID, MinAmount: 0, MaxAmount: 50, ChargeAmount: 2, ChargeType: "fixed", Status: "active"})
-					db.Create(&feeprofiles.ProfileFeeBands{ID: uuid.New(), FeeProfileID: fp.ID, MinAmount: 50.01, MaxAmount: 1000000, ChargeAmount: 1, ChargeType: "percentage", Status: "active"})
+					// Tiered structure: 0-100 K1 fixed, 100-500 1.5%, 500+ 1%
+					db.Create(&feeprofiles.ProfileFeeBands{ID: uuid.New(), FeeProfileID: fp.ID, MinAmount: 0.01, MaxAmount: 100, ChargeAmount: 1, ChargeType: "fixed", Status: "active"})
+					db.Create(&feeprofiles.ProfileFeeBands{ID: uuid.New(), FeeProfileID: fp.ID, MinAmount: 100.01, MaxAmount: 500, ChargeAmount: 1.5, ChargeType: "percentage", Status: "active"})
+					db.Create(&feeprofiles.ProfileFeeBands{ID: uuid.New(), FeeProfileID: fp.ID, MinAmount: 500.01, MaxAmount: 0, ChargeAmount: 1.0, ChargeType: "percentage", Status: "active"})
 				} else {
-					// Disbursement: Standard percentage
+					// Disbursement: 1.2% with K1 minimum
 					fp = feeprofiles.FeeProfile{
 						ID:                uuid.New(),
 						Name:              mID.String()[:8] + " " + c.Name + " Std",
@@ -222,18 +228,20 @@ func Seed(db *gorm.DB) error {
 						PaymentChannelID:  c.ID,
 						TransactionTypeID: c.TransactionTypeID,
 						Status:            "active",
-						ChargeAmount:      2,
-						MinimumFee:        5,
+						ChargeType:        "percentage",
+						ChargeAmount:      1.2,
+						MinimumFee:        1,
 						ApprovalStatus:    "approved",
 						CalculationMode:   "standard",
 					}
 					db.Create(&fp)
 				}
 			case merchantID3:
-				// Merchant 3: Percentage for all collection channels
-				chargeAmount := 3.5 // 3.5%
+				// Merchant 3: Percentage for all channels (realistic rates)
+				chargeAmount := 2.0 // 2% for collection
+				minimumFee := 1.0
 				if c.TransactionTypeID == ttDisbursement.ID {
-					chargeAmount = 2.0
+					chargeAmount = 1.1 // 1.1% for disbursement
 				}
 				fp = feeprofiles.FeeProfile{
 					ID:                uuid.New(),
@@ -244,32 +252,30 @@ func Seed(db *gorm.DB) error {
 					Status:            "active",
 					ChargeType:        "percentage",
 					ChargeAmount:      chargeAmount,
-					MinimumFee:        5,
+					MinimumFee:        minimumFee,
 					ApprovalStatus:    "approved",
 					CalculationMode:   "standard",
 				}
 				db.Create(&fp)
 			default:
-				// Other merchants: Fixed
-				chargeAmount := 20.0
+				// Other merchants (1 & 4): Realistic percentage fees
+				chargeAmount := 1.8 // 1.8% for collection
+				minimumFee := 1.0
 				if c.TransactionTypeID == ttDisbursement.ID {
-					chargeAmount = 2.0
+					chargeAmount = 1.0 // 1% for disbursement
 				}
 				fp = feeprofiles.FeeProfile{
 					ID:                uuid.New(),
-					Name:              mID.String()[:8] + " " + c.Name + " Fixed/Std",
-					Code:              "FIXED_" + c.Code,
+					Name:              mID.String()[:8] + " " + c.Name + " Percentage",
+					Code:              "PERCENT_" + c.Code,
 					PaymentChannelID:  c.ID,
 					TransactionTypeID: c.TransactionTypeID,
 					Status:            "active",
+					ChargeType:        "percentage",
 					ChargeAmount:      chargeAmount,
-					MinimumFee:        5,
+					MinimumFee:        minimumFee,
 					ApprovalStatus:    "approved",
-					CalculationMode:   "fixed",
-				}
-				if c.TransactionTypeID == ttDisbursement.ID {
-					fp.CalculationMode = "standard"
-					fp.ChargeType = "percentage"
+					CalculationMode:   "standard",
 				}
 				db.Create(&fp)
 			}

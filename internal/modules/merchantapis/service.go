@@ -295,15 +295,15 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 		}
 	}
 
-	// // Check if fee calculation returned an error status
-	// if feeResult.Status == "error" {
-	// 	return &CollectResponse{
-	// 		Code:    400,
-	// 		Status:  "failed",
-	// 		Message: feeResult.Error,
-	// 		Data:    nil,
-	// 	},
-	// }
+	// Check if fee calculation returned an error status (e.g., unauthorized merchant-channel)
+	if feeResult.Status == "error" {
+		return &CollectResponse{
+			Code:    400,
+			Status:  "failed",
+			Message: feeResult.Error,
+			Data:    nil,
+		}
+	}
 
 	// Log the fee calculation result
 	feeResultJSON, _ := json.Marshal(feeResult)
@@ -337,9 +337,9 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 	// 	return nil, fmt.Errorf("failed to forward collection to RabbitMQ: %v", err)
 	// }
 
-	utils.LogAuditEvent(app, "merchant_service", "collection.forwarded", transactionPayload)
+	// utils.LogAuditEvent(app, "merchant_service", "collection.forwarded", transactionPayload)
 
-	// Forward to transactions service
+	// // Forward to transactions service
 	responseBytes, err := app.MQ.Request("transactions.create", transactionPayload)
 
 	if err != nil {
@@ -521,6 +521,11 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 		if feeResult.Error == "" {
 			feeResult.Error = err.Error()
 		}
+		return &DisburseResponse{Status: "failed", ErrorCode: "FEE_CALCULATION_failed"}, errors.New(feeResult.Error)
+	}
+
+	// Check if fee calculation returned an error status (e.g., unauthorized merchant-channel)
+	if feeResult.Status == "error" {
 		return &DisburseResponse{Status: "failed", ErrorCode: "FEE_CALCULATION_failed"}, errors.New(feeResult.Error)
 	}
 
