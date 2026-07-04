@@ -194,7 +194,7 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 	}
 
 	// 5. Resolve fee profile
-	feeProfileKey := fmt.Sprintf("fee_profile_%s_%s_%s", merchantId, paymentChannel.PaymentServiceID, transactionType.ID)
+	feeProfileKey := fmt.Sprintf("fee_profile_%s_%s_%s", merchantId, paymentChannel.SubscriptionID, transactionType.ID)
 	var merchantFeeProfile merchantfeeprofiles.MerchantFeeProfile
 	val, err = cache.Get(ctx, feeProfileKey).Result()
 	if err == nil {

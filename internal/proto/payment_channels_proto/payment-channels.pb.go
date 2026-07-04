@@ -25,7 +25,7 @@ type CreatePaymentChannelRequest struct {
 	state                protoimpl.MessageState `protogen:"open.v1"`
 	Name                 string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Status               string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	PaymentServiceId     string                 `protobuf:"bytes,3,opt,name=payment_service_id,json=paymentServiceId,proto3" json:"payment_service_id,omitempty"`
+	SubscriptionId       string                 `protobuf:"bytes,3,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
 	TransactionTypeId    string                 `protobuf:"bytes,4,opt,name=transaction_type_id,json=transactionTypeId,proto3" json:"transaction_type_id,omitempty"`
 	SubTransactionTypeId string                 `protobuf:"bytes,5,opt,name=sub_transaction_type_id,json=subTransactionTypeId,proto3" json:"sub_transaction_type_id,omitempty"`
 	FeeType              string                 `protobuf:"bytes,6,opt,name=fee_type,json=feeType,proto3" json:"fee_type,omitempty"`
@@ -78,9 +78,9 @@ func (x *CreatePaymentChannelRequest) GetStatus() string {
 	return ""
 }
 
-func (x *CreatePaymentChannelRequest) GetPaymentServiceId() string {
+func (x *CreatePaymentChannelRequest) GetSubscriptionId() string {
 	if x != nil {
-		return x.PaymentServiceId
+		return x.SubscriptionId
 	}
 	return ""
 }
@@ -117,7 +117,7 @@ type PaymentChannel struct {
 	state                protoimpl.MessageState `protogen:"open.v1"`
 	Name                 string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Status               string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	PaymentServiceId     string                 `protobuf:"bytes,3,opt,name=payment_service_id,json=paymentServiceId,proto3" json:"payment_service_id,omitempty"`
+	SubscriptionId       string                 `protobuf:"bytes,3,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
 	TransactionTypeId    string                 `protobuf:"bytes,4,opt,name=transaction_type_id,json=transactionTypeId,proto3" json:"transaction_type_id,omitempty"`
 	SubTransactionTypeId string                 `protobuf:"bytes,5,opt,name=sub_transaction_type_id,json=subTransactionTypeId,proto3" json:"sub_transaction_type_id,omitempty"`
 	FeeType              string                 `protobuf:"bytes,6,opt,name=fee_type,json=feeType,proto3" json:"fee_type,omitempty"`
@@ -174,9 +174,9 @@ func (x *PaymentChannel) GetStatus() string {
 	return ""
 }
 
-func (x *PaymentChannel) GetPaymentServiceId() string {
+func (x *PaymentChannel) GetSubscriptionId() string {
 	if x != nil {
-		return x.PaymentServiceId
+		return x.SubscriptionId
 	}
 	return ""
 }
@@ -242,7 +242,7 @@ type GetPaymentChannelsRequest struct {
 	Page                 int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
 	PageSize             int32                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	SearchQuery          string                 `protobuf:"bytes,3,opt,name=search_query,json=searchQuery,proto3" json:"search_query,omitempty"`
-	PaymentServiceId     string                 `protobuf:"bytes,4,opt,name=payment_service_id,json=paymentServiceId,proto3" json:"payment_service_id,omitempty"`
+	SubscriptionId       string                 `protobuf:"bytes,4,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
 	TransactionTypeId    string                 `protobuf:"bytes,5,opt,name=transaction_type_id,json=transactionTypeId,proto3" json:"transaction_type_id,omitempty"`
 	SubTransactionTypeId string                 `protobuf:"bytes,6,opt,name=sub_transaction_type_id,json=subTransactionTypeId,proto3" json:"sub_transaction_type_id,omitempty"`
 	FeeType              string                 `protobuf:"bytes,7,opt,name=fee_type,json=feeType,proto3" json:"fee_type,omitempty"`
@@ -302,9 +302,9 @@ func (x *GetPaymentChannelsRequest) GetSearchQuery() string {
 	return ""
 }
 
-func (x *GetPaymentChannelsRequest) GetPaymentServiceId() string {
+func (x *GetPaymentChannelsRequest) GetSubscriptionId() string {
 	if x != nil {
-		return x.PaymentServiceId
+		return x.SubscriptionId
 	}
 	return ""
 }
@@ -409,7 +409,7 @@ type EditPaymentChannelRequest struct {
 	state                protoimpl.MessageState `protogen:"open.v1"`
 	Name                 string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Status               string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
-	PaymentServiceId     string                 `protobuf:"bytes,4,opt,name=payment_service_id,json=paymentServiceId,proto3" json:"payment_service_id,omitempty"`
+	SubscriptionId       string                 `protobuf:"bytes,4,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
 	TransactionTypeId    string                 `protobuf:"bytes,5,opt,name=transaction_type_id,json=transactionTypeId,proto3" json:"transaction_type_id,omitempty"`
 	SubTransactionTypeId string                 `protobuf:"bytes,6,opt,name=sub_transaction_type_id,json=subTransactionTypeId,proto3" json:"sub_transaction_type_id,omitempty"`
 	FeeType              string                 `protobuf:"bytes,7,opt,name=fee_type,json=feeType,proto3" json:"fee_type,omitempty"`
@@ -463,9 +463,9 @@ func (x *EditPaymentChannelRequest) GetStatus() string {
 	return ""
 }
 
-func (x *EditPaymentChannelRequest) GetPaymentServiceId() string {
+func (x *EditPaymentChannelRequest) GetSubscriptionId() string {
 	if x != nil {
-		return x.PaymentServiceId
+		return x.SubscriptionId
 	}
 	return ""
 }
@@ -509,19 +509,19 @@ var File_payment_channels_proto protoreflect.FileDescriptor
 
 const file_payment_channels_proto_rawDesc = "" +
 	"\n" +
-	"\x16payment-channels.proto\x12\x16payment_channels_proto\"\x9c\x02\n" +
+	"\x16payment-channels.proto\x12\x16payment_channels_proto\"\x97\x02\n" +
 	"\x1bCreatePaymentChannelRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
-	"\x06status\x18\x02 \x01(\tR\x06status\x12,\n" +
-	"\x12payment_service_id\x18\x03 \x01(\tR\x10paymentServiceId\x12.\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12'\n" +
+	"\x0fsubscription_id\x18\x03 \x01(\tR\x0esubscriptionId\x12.\n" +
 	"\x13transaction_type_id\x18\x04 \x01(\tR\x11transactionTypeId\x125\n" +
 	"\x17sub_transaction_type_id\x18\x05 \x01(\tR\x14subTransactionTypeId\x12\x19\n" +
 	"\bfee_type\x18\x06 \x01(\tR\afeeType\x12!\n" +
-	"\fprovider_fee\x18\a \x01(\tR\vproviderFee\"\xf1\x02\n" +
+	"\fprovider_fee\x18\a \x01(\tR\vproviderFee\"\xec\x02\n" +
 	"\x0ePaymentChannel\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
-	"\x06status\x18\x02 \x01(\tR\x06status\x12,\n" +
-	"\x12payment_service_id\x18\x03 \x01(\tR\x10paymentServiceId\x12.\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12'\n" +
+	"\x0fsubscription_id\x18\x03 \x01(\tR\x0esubscriptionId\x12.\n" +
 	"\x13transaction_type_id\x18\x04 \x01(\tR\x11transactionTypeId\x125\n" +
 	"\x17sub_transaction_type_id\x18\x05 \x01(\tR\x14subTransactionTypeId\x12\x19\n" +
 	"\bfee_type\x18\x06 \x01(\tR\afeeType\x12!\n" +
@@ -532,12 +532,12 @@ const file_payment_channels_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\n" +
 	" \x01(\tR\tupdatedAt\x12\x12\n" +
-	"\x04logo\x18\v \x01(\tR\x04logo\"\xc2\x02\n" +
+	"\x04logo\x18\v \x01(\tR\x04logo\"\xbd\x02\n" +
 	"\x19GetPaymentChannelsRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12!\n" +
-	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\x12,\n" +
-	"\x12payment_service_id\x18\x04 \x01(\tR\x10paymentServiceId\x12.\n" +
+	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\x12'\n" +
+	"\x0fsubscription_id\x18\x04 \x01(\tR\x0esubscriptionId\x12.\n" +
 	"\x13transaction_type_id\x18\x05 \x01(\tR\x11transactionTypeId\x125\n" +
 	"\x17sub_transaction_type_id\x18\x06 \x01(\tR\x14subTransactionTypeId\x12\x19\n" +
 	"\bfee_type\x18\a \x01(\tR\afeeType\x12!\n" +
@@ -547,11 +547,11 @@ const file_payment_channels_proto_rawDesc = "" +
 	"\vtotal_pages\x18\x02 \x01(\x05R\n" +
 	"totalPages\x12!\n" +
 	"\fcurrent_page\x18\x03 \x01(\x05R\vcurrentPage\x12\x19\n" +
-	"\bhas_more\x18\x04 \x01(\bR\ahasMore\"\xaa\x02\n" +
+	"\bhas_more\x18\x04 \x01(\bR\ahasMore\"\xa5\x02\n" +
 	"\x19EditPaymentChannelRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
-	"\x06status\x18\x03 \x01(\tR\x06status\x12,\n" +
-	"\x12payment_service_id\x18\x04 \x01(\tR\x10paymentServiceId\x12.\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\x12'\n" +
+	"\x0fsubscription_id\x18\x04 \x01(\tR\x0esubscriptionId\x12.\n" +
 	"\x13transaction_type_id\x18\x05 \x01(\tR\x11transactionTypeId\x125\n" +
 	"\x17sub_transaction_type_id\x18\x06 \x01(\tR\x14subTransactionTypeId\x12\x19\n" +
 	"\bfee_type\x18\a \x01(\tR\afeeType\x12!\n" +

@@ -11,7 +11,6 @@ import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantips"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantpaymentchannels"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentchannels"
-	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentservices"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/prefixes"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/providers"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/subscriptions"
@@ -45,7 +44,6 @@ func Seed(db *gorm.DB) error {
 	db.Exec("DELETE FROM payment_channels")
 	db.Exec("DELETE FROM sub_transaction_types")
 	db.Exec("DELETE FROM transaction_types")
-	db.Exec("DELETE FROM payment_services")
 	db.Exec("DELETE FROM providers")
 
 	// 1. Providers
@@ -56,14 +54,14 @@ func Seed(db *gorm.DB) error {
 		return err
 	}
 
-	// 2. Payment Services
-	psMM := paymentservices.PaymentService{
-		ID:     uuid.New(),
-		Name:   "Mobile Money",
-		Status: "active",
-		Logo:   "https://example.com/mobile_money.png",
+	// 2. Subscriptions
+	subMM := subscriptions.Subscription{
+		ID:          uuid.New(),
+		Name:        "Mobile Money",
+		Status:      "active",
+		Description: "Give merchant access to Mobile Money transactions, collection and disbursement",
 	}
-	if err := db.Create(&psMM).Error; err != nil {
+	if err := db.Create(&subMM).Error; err != nil {
 		return err
 	}
 
@@ -90,12 +88,12 @@ func Seed(db *gorm.DB) error {
 
 	// 4. Payment Channels
 	channels := []paymentchannels.PaymentChannel{
-		{ID: uuid.New(), Name: "Airtel (Collection)", Code: "airtel", ProviderID: provAirtel.ID, PaymentServiceID: psMM.ID, TransactionTypeID: ttCollection.ID, FeeType: "band", ProviderFee: "0.00", Status: "active"},
-		{ID: uuid.New(), Name: "Airtel (Disbursement)", Code: "airtel_disburse", ProviderID: provAirtel.ID, PaymentServiceID: psMM.ID, TransactionTypeID: ttDisbursement.ID, FeeType: "percentage", ProviderFee: "0.00", Status: "active"},
-		{ID: uuid.New(), Name: "MTN (Collection)", Code: "mtn", ProviderID: provMTN.ID, PaymentServiceID: psMM.ID, TransactionTypeID: ttCollection.ID, FeeType: "band", ProviderFee: "0.00", Status: "active"},
-		{ID: uuid.New(), Name: "MTN (Disbursement)", Code: "mtn_disburse", ProviderID: provMTN.ID, PaymentServiceID: psMM.ID, TransactionTypeID: ttDisbursement.ID, FeeType: "percentage", ProviderFee: "0.00", Status: "active"},
-		{ID: uuid.New(), Name: "Zamtel (Collection)", Code: "zamtel", ProviderID: provZamtel.ID, PaymentServiceID: psMM.ID, TransactionTypeID: ttCollection.ID, FeeType: "band", ProviderFee: "0.00", Status: "active"},
-		{ID: uuid.New(), Name: "Zamtel (Disbursement)", Code: "zamtel_disburse", ProviderID: provZamtel.ID, PaymentServiceID: psMM.ID, TransactionTypeID: ttDisbursement.ID, FeeType: "percentage", ProviderFee: "0.00", Status: "active"},
+		{ID: uuid.New(), Name: "Airtel (Collection)", Code: "airtel", ProviderID: provAirtel.ID, SubscriptionID: subMM.ID, TransactionTypeID: ttCollection.ID, FeeType: "band", ProviderFee: "0.00", Status: "active"},
+		{ID: uuid.New(), Name: "Airtel (Disbursement)", Code: "airtel_disburse", ProviderID: provAirtel.ID, SubscriptionID: subMM.ID, TransactionTypeID: ttDisbursement.ID, FeeType: "percentage", ProviderFee: "0.00", Status: "active"},
+		{ID: uuid.New(), Name: "MTN (Collection)", Code: "mtn", ProviderID: provMTN.ID, SubscriptionID: subMM.ID, TransactionTypeID: ttCollection.ID, FeeType: "band", ProviderFee: "0.00", Status: "active"},
+		{ID: uuid.New(), Name: "MTN (Disbursement)", Code: "mtn_disburse", ProviderID: provMTN.ID, SubscriptionID: subMM.ID, TransactionTypeID: ttDisbursement.ID, FeeType: "percentage", ProviderFee: "0.00", Status: "active"},
+		{ID: uuid.New(), Name: "Zamtel (Collection)", Code: "zamtel", ProviderID: provZamtel.ID, SubscriptionID: subMM.ID, TransactionTypeID: ttCollection.ID, FeeType: "band", ProviderFee: "0.00", Status: "active"},
+		{ID: uuid.New(), Name: "Zamtel (Disbursement)", Code: "zamtel_disburse", ProviderID: provZamtel.ID, SubscriptionID: subMM.ID, TransactionTypeID: ttDisbursement.ID, FeeType: "percentage", ProviderFee: "0.00", Status: "active"},
 	}
 	for i := range channels {
 		if err := db.Create(&channels[i]).Error; err != nil {
@@ -166,15 +164,6 @@ func Seed(db *gorm.DB) error {
 	}
 
 	// 7. Subscriptions
-	subMM := subscriptions.Subscription{
-		ID:          uuid.New(),
-		Name:        "Mobile Money",
-		Status:      "active",
-		Description: "Give merchant access to Mobile Money transactions, collection and disbursement",
-	}
-	if err := db.Create(&subMM).Error; err != nil {
-		return err
-	}
 
 	// 8. Create Merchants and link them to channels and profiles
 	merchantID1 := uuid.MustParse("3d15c820-485c-4ceb-b040-4de1e7d4bd56")

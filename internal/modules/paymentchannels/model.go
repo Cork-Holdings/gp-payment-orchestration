@@ -2,8 +2,8 @@ package paymentchannels
 
 import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/common"
-	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentservices"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/providers"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/subscriptions"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/transactiontypes"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -17,8 +17,8 @@ type PaymentChannel struct {
 	Status               string                              `gorm:"type:varchar(255);default:inactive"`
 	ProviderID           uuid.UUID                           `gorm:"type:uuid;not null"`
 	Provider             providers.Provider                  `gorm:"foreignKey:ProviderID"`
-	PaymentServiceID     uuid.UUID                           `gorm:"type:uuid;not null"`
-	PaymentService       paymentservices.PaymentService      `gorm:"foreignKey:PaymentServiceID"`
+	SubscriptionID       uuid.UUID                           `gorm:"type:uuid;not null"`
+	Subscription         subscriptions.Subscription          `gorm:"foreignKey:SubscriptionID"`
 	TransactionTypeID    uuid.UUID                           `gorm:"type:uuid;not null"`
 	TransactionType      transactiontypes.TransactionType    `gorm:"foreignKey:TransactionTypeID"`
 	SubTransactionTypeID uuid.UUID                           `gorm:"type:uuid;default:null"`

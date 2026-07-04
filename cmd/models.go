@@ -8,7 +8,6 @@ import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantips"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantpaymentchannels"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentchannels"
-	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentservices"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/prefixes"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/providers"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/subscriptions"
@@ -24,7 +23,6 @@ func RegisterAppModels(app *global.App) {
 		&feeprofiles.FeeProfile{},
 		&feeprofiles.ProfileFeeBands{},
 		&providers.Provider{},
-		&paymentservices.PaymentService{},
 		&paymentchannels.PaymentChannel{},
 		&paymentchannels.ChannelFeeBands{},
 		&merchantpaymentchannels.MerchantPaymentChannel{},

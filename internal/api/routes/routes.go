@@ -17,15 +17,6 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 		feeProfileRoutes.DELETE("/delete/:id", handlers.DeleteFeeProfileHandler)
 	}
 
-	paymentServiceRoutes := e.Group("/payment-services")
-	{
-		paymentServiceRoutes.POST("/create", handlers.CreatePaymentServiceHandler)
-		paymentServiceRoutes.GET("/list", handlers.GetPaymentServicesHandler)
-		paymentServiceRoutes.GET("/get/:id", handlers.GetPaymentServiceHandler)
-		paymentServiceRoutes.PUT("/update", handlers.UpdatePaymentServiceHandler)
-		paymentServiceRoutes.DELETE("/delete/:id", handlers.DeletePaymentServiceHandler)
-	}
-
 	paymentChannelRoutes := e.Group("/payment-channels")
 	{
 		paymentChannelRoutes.POST("/create", handlers.CreatePaymentChannelHandler)

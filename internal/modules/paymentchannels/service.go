@@ -19,7 +19,7 @@ func CreatePaymentChannel(req *payment_channels_proto.CreatePaymentChannelReques
 	if err != nil {
 		return err
 	}
-	paymentServiceID, err := uuid.Parse(req.PaymentServiceId)
+	subscriptionID, err := uuid.Parse(req.SubscriptionId)
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func CreatePaymentChannel(req *payment_channels_proto.CreatePaymentChannelReques
 		ID:                   uuid.New(),
 		Name:                 req.Name,
 		Status:               req.Status,
-		PaymentServiceID:     paymentServiceID,
+		SubscriptionID:       subscriptionID,
 		FeeType:              req.FeeType,
 		ProviderFee:          req.ProviderFee,
 		TransactionTypeID:    transactionTypeID,
@@ -71,8 +71,8 @@ func GetPaymentChannels(req *payment_channels_proto.GetPaymentChannelsRequest) (
 	if req.SearchQuery != "" {
 		query = query.Where("name LIKE ?", "%"+req.SearchQuery+"%")
 	}
-	if req.PaymentServiceId != "" {
-		query = query.Where("payment_service_id = ?", req.PaymentServiceId)
+	if req.SubscriptionId != "" {
+		query = query.Where("subscription_id = ?", req.SubscriptionId)
 	}
 	if req.TransactionTypeId != "" {
 		query = query.Where("transaction_type_id = ?", req.TransactionTypeId)
@@ -123,7 +123,7 @@ func GetPaymentChannels(req *payment_channels_proto.GetPaymentChannelsRequest) (
 			Id:                   paymentChannel.ID.String(),
 			Name:                 paymentChannel.Name,
 			Status:               paymentChannel.Status,
-			PaymentServiceId:     paymentChannel.PaymentServiceID.String(),
+			SubscriptionId:       paymentChannel.SubscriptionID.String(),
 			TransactionTypeId:    transactionId,
 			SubTransactionTypeId: subTransactionId,
 			FeeType:              paymentChannel.FeeType,
@@ -150,8 +150,8 @@ func UpdatePaymentChannel(req *payment_channels_proto.EditPaymentChannelRequest)
 	if req.Status != "" {
 		updates["status"] = req.Status
 	}
-	if req.PaymentServiceId != "" {
-		updates["payment_service_id"] = req.PaymentServiceId
+	if req.SubscriptionId != "" {
+		updates["subscription_id"] = req.SubscriptionId
 	}
 	if req.TransactionTypeId != "" {
 		updates["transaction_type_id"] = req.TransactionTypeId

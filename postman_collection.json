@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "gp-payment-orchestration-2024",
     "name": "GP Payment Orchestration API",
-    "description": "Payment orchestration platform API. Includes OAuth token generation, merchant-facing mobile money endpoints (protected), and admin management APIs for fee profiles, payment services, payment channels, transaction types, subscriptions, merchant API keys, IPs, and more.",
+    "description": "Payment orchestration platform API. Includes OAuth token generation, merchant-facing mobile money endpoints (protected), and admin management APIs for fee profiles, payment channels, transaction types, subscriptions, providers, merchant API keys, IPs, and more. Payment channels are now linked directly to subscriptions instead of payment services.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -12,8 +12,8 @@
     { "key": "bearer_token", "value": "", "type": "string" },
     { "key": "transaction_ref", "value": "TXN-{{$timestamp}}", "type": "string" },
     { "key": "fee_profile_id", "value": "", "type": "string" },
-    { "key": "payment_service_id", "value": "", "type": "string" },
     { "key": "payment_channel_id", "value": "", "type": "string" },
+    { "key": "provider_id", "value": "", "type": "string" },
     { "key": "transaction_type_id", "value": "", "type": "string" },
     { "key": "sub_transaction_type_id", "value": "", "type": "string" },
     { "key": "merchant_fee_profile_id", "value": "", "type": "string" },
@@ -270,30 +270,30 @@
       ]
     },
     {
-      "name": "Admin - Payment Services",
-      "description": "Manage high-level payment services (e.g. Mobile Money, Card).",
+      "name": "Admin - Providers",
+      "description": "Manage payment providers (e.g., Airtel, MTN, Zamtel). Payment channels link to providers and subscriptions.",
       "item": [
         {
-          "name": "Create Payment Service",
+          "name": "Create Provider",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Mobile Money\",\n  \"status\": \"active\"\n}",
+              "raw": "{\n  \"name\": \"MTN\",\n  \"code\": \"MTN\",\n  \"status\": \"active\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": { "raw": "{{baseUrl}}/payment-services/create", "host": ["{{baseUrl}}"], "path": ["payment-services", "create"] }
+            "url": { "raw": "{{baseUrl}}/providers/create", "host": ["{{baseUrl}}"], "path": ["providers", "create"] }
           }
         },
         {
-          "name": "List Payment Services",
+          "name": "List Providers",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/payment-services/list?page=1&page_size=10&search_query=",
+              "raw": "{{baseUrl}}/providers/list?page=1&page_size=10&search_query=",
               "host": ["{{baseUrl}}"],
-              "path": ["payment-services", "list"],
+              "path": ["providers", "list"],
               "query": [
                 { "key": "page", "value": "1" },
                 { "key": "page_size", "value": "10" },
@@ -303,39 +303,39 @@
           }
         },
         {
-          "name": "Get Payment Service",
+          "name": "Get Provider",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/payment-services/get/:id",
+              "raw": "{{baseUrl}}/providers/get/:id",
               "host": ["{{baseUrl}}"],
-              "path": ["payment-services", "get", ":id"],
-              "variable": [{ "key": "id", "value": "{{payment_service_id}}" }]
+              "path": ["providers", "get", ":id"],
+              "variable": [{ "key": "id", "value": "{{provider_id}}" }]
             }
           }
         },
         {
-          "name": "Update Payment Service",
+          "name": "Update Provider",
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"id\": \"{{payment_service_id}}\",\n  \"name\": \"Mobile Money Updated\",\n  \"status\": \"active\"\n}",
+              "raw": "{\n  \"id\": \"{{provider_id}}\",\n  \"name\": \"MTN Updated\",\n  \"code\": \"MTN\",\n  \"status\": \"active\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": { "raw": "{{baseUrl}}/payment-services/update", "host": ["{{baseUrl}}"], "path": ["payment-services", "update"] }
+            "url": { "raw": "{{baseUrl}}/providers/update", "host": ["{{baseUrl}}"], "path": ["providers", "update"] }
           }
         },
         {
-          "name": "Delete Payment Service",
+          "name": "Delete Provider",
           "request": {
             "method": "DELETE",
             "url": {
-              "raw": "{{baseUrl}}/payment-services/delete/:id",
+              "raw": "{{baseUrl}}/providers/delete/:id",
               "host": ["{{baseUrl}}"],
-              "path": ["payment-services", "delete", ":id"],
-              "variable": [{ "key": "id", "value": "{{payment_service_id}}" }]
+              "path": ["providers", "delete", ":id"],
+              "variable": [{ "key": "id", "value": "{{provider_id}}" }]
             }
           }
         }
@@ -343,7 +343,7 @@
     },
     {
       "name": "Admin - Payment Channels",
-      "description": "Manage payment channels (e.g. MTN UG Collection, Airtel UG Disbursement). Linked to a payment service and transaction type.",
+      "description": "Manage payment channels (e.g. MTN Collection, Airtel Disbursement). Linked to a provider, subscription, and transaction type.",
       "item": [
         {
           "name": "Create Payment Channel",
@@ -352,7 +352,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"MTN UG Collection\",\n  \"status\": \"active\",\n  \"payment_service_id\": \"{{payment_service_id}}\",\n  \"transaction_type_id\": \"{{transaction_type_id}}\",\n  \"sub_transaction_type_id\": \"{{sub_transaction_type_id}}\",\n  \"fee_type\": \"percentage\",\n  \"provider_fee\": \"1.5\"\n}",
+              "raw": "{\n  \"name\": \"MTN Collection\",\n  \"code\": \"mtn_collection\",\n  \"status\": \"active\",\n  \"provider_id\": \"{{provider_id}}\",\n  \"subscription_id\": \"{{subscription_id}}\",\n  \"transaction_type_id\": \"{{transaction_type_id}}\",\n  \"fee_type\": \"band\",\n  \"provider_fee\": \"0.00\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{baseUrl}}/payment-channels/create", "host": ["{{baseUrl}}"], "path": ["payment-channels", "create"] }
@@ -363,14 +363,14 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/payment-channels/list?page=1&page_size=10&search_query=&payment_service_id=&transaction_type_id=",
+              "raw": "{{baseUrl}}/payment-channels/list?page=1&page_size=10&search_query=&subscription_id=&transaction_type_id=",
               "host": ["{{baseUrl}}"],
               "path": ["payment-channels", "list"],
               "query": [
                 { "key": "page", "value": "1" },
                 { "key": "page_size", "value": "10" },
                 { "key": "search_query", "value": "" },
-                { "key": "payment_service_id", "value": "" },
+                { "key": "subscription_id", "value": "" },
                 { "key": "transaction_type_id", "value": "" }
               ]
             }
@@ -395,7 +395,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"id\": \"{{payment_channel_id}}\",\n  \"name\": \"MTN UG Collection v2\",\n  \"status\": \"active\",\n  \"payment_service_id\": \"{{payment_service_id}}\",\n  \"transaction_type_id\": \"{{transaction_type_id}}\",\n  \"sub_transaction_type_id\": \"{{sub_transaction_type_id}}\",\n  \"fee_type\": \"flat\",\n  \"provider_fee\": \"1000\"\n}",
+              "raw": "{\n  \"id\": \"{{payment_channel_id}}\",\n  \"name\": \"MTN Collection v2\",\n  \"code\": \"mtn_collection\",\n  \"status\": \"active\",\n  \"provider_id\": \"{{provider_id}}\",\n  \"subscription_id\": \"{{subscription_id}}\",\n  \"transaction_type_id\": \"{{transaction_type_id}}\",\n  \"fee_type\": \"band\",\n  \"provider_fee\": \"0.00\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{baseUrl}}/payment-channels/update", "host": ["{{baseUrl}}"], "path": ["payment-channels", "update"] }
