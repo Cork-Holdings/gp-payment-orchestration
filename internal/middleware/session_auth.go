@@ -13,15 +13,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// SessionAuthMiddleware validates the platform's shared ECDSA-signed session
-// token — the same one gp_auth issues and gp_gateway validates before
-// proxying here. It protects the merchant/admin-facing config routes
-// (subscriptions, merchant-subscriptions, merchant-api-keys, etc.) that
-// previously had no auth at all.
-//
-// This only authenticates the caller (rejects missing/invalid/expired
-// tokens); it does not yet derive merchant identity from the claims for
-// authorization — handlers still take merchant_id as a request parameter.
 func SessionAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -71,10 +62,6 @@ func SessionAuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// normalizePEM ensures a PEM key has proper line breaks even when stored as a
-// single-line string (common when set via environment variables). Mirrors
-// gp_gateway's internal/api/middleware/auth.go so the same PUBLIC_KEY value
-// works unmodified in both services.
 func normalizePEM(key string) string {
 	const header = "-----BEGIN PUBLIC KEY-----"
 	const footer = "-----END PUBLIC KEY-----"

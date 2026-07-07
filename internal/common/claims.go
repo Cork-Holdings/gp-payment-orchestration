@@ -2,10 +2,6 @@ package common
 
 import "github.com/golang-jwt/jwt/v5"
 
-// Claims mirrors gp_gateway's internal/common.Claims — the single unified JWT
-// claims struct issued by gp_auth for merchant/admin session tokens. Kept in
-// sync field-for-field so tokens verified here decode identically to how the
-// gateway decodes them.
 type Claims struct {
 	jwt.RegisteredClaims
 
