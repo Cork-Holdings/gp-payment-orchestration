@@ -98,6 +98,8 @@ func DeleteSubscriptionHandler(c *gin.Context) {
 		utils.RespondWithError(c, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	utils.RespondWithSuccess(c, "Subscription deleted successfully")
 }
 
 func CreateMerchantSubscriptionHandler(c *gin.Context) {
