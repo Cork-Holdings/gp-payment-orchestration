@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package providers_proto;
+
+
+option go_package = "/proto/providers_proto;providers_proto";
+
+
+message CreateProviderRequest {
+    string name = 1;
+    string status = 2;
+    string code =3;
+}
+
+message Provider {
+    string name = 1;
+    string status = 2;
+    string id = 3;
+    string created_at = 4;
+    string updated_at = 5;
+    string code = 6;
+}
+
+
+message GetProvidersRequest {
+    int32 page =1;
+    int32 page_size =2;
+    string provider_name =3;
+}
+
+message GetProvidersResponse {
+    repeated Provider providers = 1;       // List of providers
+    int32 total_pages = 2;         // Total number of pages
+    int32 current_page = 3;        // Current page
+    bool has_more = 4;             // Whether there are more pages
+  }
+
+message EditProviderRequest {
+    string name = 1;
+    string status = 2;
+    string id = 3;
+    string code = 4;
+}
+

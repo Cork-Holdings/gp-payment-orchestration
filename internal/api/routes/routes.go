@@ -140,4 +140,14 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 		merchantIpRoutes.PUT("/update", handlers.UpdateMerchantIPHandler)
 		merchantIpRoutes.DELETE("/delete/:id", handlers.DeleteMerchantIPHandler)
 	}
+
+	providersRoutes := e.Group("/providers")
+	providersRoutes.Use(middleware.SessionAuthMiddleware())
+	{
+		providersRoutes.POST("/create", handlers.CreateProviderHandler)
+		providersRoutes.GET("/list", handlers.GetProvidersHandler)
+		providersRoutes.GET("/get/:id", handlers.GetProviderHandler)
+		providersRoutes.PUT("/update", handlers.UpdateProviderHandler)
+		providersRoutes.DELETE("/delete/:id", handlers.DeleteProviderHandler)
+	}
 }
