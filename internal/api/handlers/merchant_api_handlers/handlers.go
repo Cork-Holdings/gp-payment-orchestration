@@ -312,3 +312,24 @@ func HandleCreateCheckoutSessionHandler(c *gin.Context) {
 
 // 	c.JSON(code, rpcPayload)
 // }
+
+func HandleNameLookupHandler(c *gin.Context) {
+
+	clientID := c.GetString("client_id")
+
+	phone := c.Param("phone")
+
+	nameLookupReq := &merchantapis.NameLookupRequest{
+		ClientID:    clientID,
+		PhoneNumber: phone,
+	}
+
+	nameLookupResp, err := merchantapis.HandleNameLookup(global.New(), nameLookupReq)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, nameLookupResp)
+
+}

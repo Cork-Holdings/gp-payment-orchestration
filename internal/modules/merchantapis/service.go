@@ -68,6 +68,7 @@ type CheckDisbursementBalanceRequest struct {
 	ClientID       string `json:"client_id"`
 	XAuthSignature string `json:"x_auth_signature"`
 }
+
 type CheckDisbursementBalanceResponse struct {
 	Code    int         `json:"code"`
 	Status  string      `json:"status"`
@@ -112,6 +113,27 @@ type DisburseResponse struct {
 	TransactionRef string `json:"transaction_ref,omitempty"`
 	Status         string `json:"status"`
 	ErrorCode      string `json:"error_code,omitempty"`
+}
+
+type NameLookupRequest struct {
+	ClientID    string `json:"client_id"`
+	PhoneNumber string `json:"phone_number"`
+}
+
+type NameLookupData struct {
+	PhoneNumber string `json:"phone_number"`
+	Provider    string `json:"provider"`
+	Status      string `json:"status"`
+	Names       string `json:"names"`
+	Message     string `json:"message"`
+	ProcessedAt string `json:"processed_at"`
+}
+
+type NameLookupResponse struct {
+	Code    int             `json:"code"`
+	Status  string          `json:"status"`
+	Message string          `json:"message"`
+	Data    *NameLookupData `json:"data,omitempty"`
 }
 
 // HandleGenerateToken validates credentials and generates a Bearer JWT token
@@ -768,4 +790,97 @@ func getProviderFromPhoneNumber(phoneNumber string) string {
 	default:
 		return "Unsupported Provider for " + phoneNumber
 	}
+}
+
+// HandleNameLookup performs name lookup via MNO service (MTN/Airtel/Zamtel APIs)
+// Validates merchant, phone number format, and provider support before forwarding to MNO service.
+// Returns account holder name from the MNO API via RPC response.
+func HandleNameLookup(app *global.App, req *NameLookupRequest) (*NameLookupResponse, error) {
+	// Verify merchant exists in database
+	var merchant merchantapikeys.MerchantAPIKey
+	err := app.DB.Where("client_id = ?", req.ClientID).First(&merchant).Error
+	if err != nil {
+		return &NameLookupResponse{
+			Code:    400,
+			Status:  "error",
+			Message: "Merchant not found for client_id: " + req.ClientID,
+		}, nil
+	}
+
+	// Validate phone number format: must be 12+ digits (Zambian format: 260XXXXXXXXX)
+	if len(req.PhoneNumber) < 12 {
+		return &NameLookupResponse{
+			Code:    400,
+			Status:  "error",
+			Message: "Invalid phone number format. Phone number must be at least 12 digits long (e.g., 260956587842).",
+		}, nil
+	}
+
+	// Check if phone prefix is supported by any provider
+	provider := getProviderFromPhoneNumber(req.PhoneNumber)
+	if strings.HasPrefix(provider, "Unsupported Provider") {
+		return &NameLookupResponse{
+			Code:    400,
+			Status:  "error",
+			Message: provider,
+		}, nil
+	}
+
+	log.Printf("[HandleNameLookup] Initiating name lookup for phone: %s, provider: %s, client_id: %s",
+		req.PhoneNumber, provider, req.ClientID)
+
+	// Build payload for MNO service (RabbitMQ request to mno.namelookup.requests queue)
+	lookupPayload := map[string]interface{}{
+		"phone_number": req.PhoneNumber,
+	}
+
+	// Send RPC request to MNO service and wait for response
+	responseBytes, err := app.MQ.Request("mno.namelookup.requests", lookupPayload)
+	if err != nil {
+		log.Printf("[HandleNameLookup] RPC request failed: %v", err)
+		return &NameLookupResponse{
+			Code:    500,
+			Status:  "error",
+			Message: "Failed to contact MNO service: " + err.Error(),
+		}, nil
+	}
+
+	// Parse MNO service response (flat structure from MNO service)
+	var mnoData NameLookupData
+	if err := json.Unmarshal(responseBytes, &mnoData); err != nil {
+		log.Printf("[HandleNameLookup] Failed to unmarshal MNO response: %v", err)
+		return &NameLookupResponse{
+			Code:    500,
+			Status:  "error",
+			Message: "Failed to parse MNO service response",
+		}, nil
+	}
+
+	// Log the result (masking phone number for privacy)
+	log.Printf("[HandleNameLookup] Name lookup completed. Status: %s, Provider: %s, Message: %s",
+		mnoData.Status, mnoData.Provider, mnoData.Message)
+
+	// Determine response code based on status
+	respCode := 200
+	if mnoData.Status == "failed" || mnoData.Status == "error" {
+		respCode = 400
+	}
+
+	// Build response
+	resp := NameLookupResponse{
+		Code:    respCode,
+		Status:  mnoData.Status,
+		Message: mnoData.Message,
+		Data:    &mnoData,
+	}
+
+	// Log audit trail
+	utils.LogAuditEvent(app, "merchant_service", "namelookup.completed", map[string]interface{}{
+		"client_id": req.ClientID,
+		"provider":  mnoData.Provider,
+		"status":    mnoData.Status,
+		"message":   mnoData.Message,
+	})
+
+	return &resp, nil
 }

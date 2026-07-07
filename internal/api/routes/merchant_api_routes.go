@@ -46,6 +46,8 @@ func RegisterMerchantRoutes(e *gin.Engine, app *global.App) {
 		// H. Get Checkout Session
 		// protected.GET("/checkout/session/:id", merchantapihandlers.HandleGetCheckoutSessionHandler)
 
+		//I. Name Lookup
+		protected.POST("/name-lookup/:phone", merchantapihandlers.HandleNameLookupHandler)
 	}
 }
 
