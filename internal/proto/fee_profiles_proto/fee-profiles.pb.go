@@ -198,6 +198,8 @@ type FeeProfile struct {
 	PaymentChannelName     string                 `protobuf:"bytes,18,opt,name=payment_channel_name,json=paymentChannelName,proto3" json:"payment_channel_name,omitempty"`
 	TransactionTypeName    string                 `protobuf:"bytes,19,opt,name=transaction_type_name,json=transactionTypeName,proto3" json:"transaction_type_name,omitempty"`
 	SubTransactionTypeName string                 `protobuf:"bytes,20,opt,name=sub_transaction_type_name,json=subTransactionTypeName,proto3" json:"sub_transaction_type_name,omitempty"`
+	ChargeType             string                 `protobuf:"bytes,21,opt,name=charge_type,json=chargeType,proto3" json:"charge_type,omitempty"`
+	MinimumFee             string                 `protobuf:"bytes,22,opt,name=minimum_fee,json=minimumFee,proto3" json:"minimum_fee,omitempty"`
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -361,6 +363,20 @@ func (x *FeeProfile) GetTransactionTypeName() string {
 func (x *FeeProfile) GetSubTransactionTypeName() string {
 	if x != nil {
 		return x.SubTransactionTypeName
+	}
+	return ""
+}
+
+func (x *FeeProfile) GetChargeType() string {
+	if x != nil {
+		return x.ChargeType
+	}
+	return ""
+}
+
+func (x *FeeProfile) GetMinimumFee() string {
+	if x != nil {
+		return x.MinimumFee
 	}
 	return ""
 }
@@ -667,7 +683,7 @@ const file_fee_profiles_proto_rawDesc = "" +
 	"\vcharge_type\x18\x0f \x01(\tR\n" +
 	"chargeType\x12\x1f\n" +
 	"\vminimum_fee\x18\x10 \x01(\tR\n" +
-	"minimumFee\"\xd5\x05\n" +
+	"minimumFee\"\x97\x06\n" +
 	"\n" +
 	"FeeProfile\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
@@ -694,7 +710,11 @@ const file_fee_profiles_proto_rawDesc = "" +
 	"updated_at\x18\x11 \x01(\tR\tupdatedAt\x120\n" +
 	"\x14payment_channel_name\x18\x12 \x01(\tR\x12paymentChannelName\x122\n" +
 	"\x15transaction_type_name\x18\x13 \x01(\tR\x13transactionTypeName\x129\n" +
-	"\x19sub_transaction_type_name\x18\x14 \x01(\tR\x16subTransactionTypeName\"i\n" +
+	"\x19sub_transaction_type_name\x18\x14 \x01(\tR\x16subTransactionTypeName\x12\x1f\n" +
+	"\vcharge_type\x18\x15 \x01(\tR\n" +
+	"chargeType\x12\x1f\n" +
+	"\vminimum_fee\x18\x16 \x01(\tR\n" +
+	"minimumFee\"i\n" +
 	"\x15GetFeeProfilesRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1a\n" +
 	"\bpageSize\x18\x02 \x01(\x05R\bpageSize\x12 \n" +

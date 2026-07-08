@@ -156,6 +156,8 @@ func GetFeeProfiles(req *fee_profiles_proto.GetFeeProfilesRequest) (*fee_profile
 			SubTransactionTypeId:   subTransactionTypeId,
 			CreatedAt:              createdAt,
 			UpdatedAt:              updatedAt,
+			ChargeType:             feeprofile.ChargeType,
+			MinimumFee:             strconv.FormatFloat(feeprofile.MinimumFee, 'f', -1, 64),
 		})
 	}
 	return &fee_profiles_proto.GetFeeProfilesResponse{

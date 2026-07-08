@@ -46,6 +46,8 @@ message FeeProfile {
     string payment_channel_name = 18;
     string transaction_type_name = 19;
     string sub_transaction_type_name = 20;
+    string charge_type = 21;
+    string minimum_fee = 22;
 }
 
 
