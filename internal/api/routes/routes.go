@@ -3,14 +3,13 @@ package routes
 import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/api/handlers"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
-	"github.com/Cork-Holdings/gp_payment_orchestration/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
 func RegisterRoutes(e *gin.Engine, app *global.App) {
 
 	feeProfileRoutes := e.Group("/fee-profiles")
-	feeProfileRoutes.Use(middleware.SessionAuthMiddleware())
+	// feeProfileRoutes.Use(middleware.SessionAuthMiddleware())
 	{
 		feeProfileRoutes.POST("/create", handlers.NewFeeProfileHandler)
 		feeProfileRoutes.GET("/list", handlers.GetFeeProfilesHandler)
@@ -20,7 +19,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 	}
 
 	paymentChannelRoutes := e.Group("/payment-channels")
-	paymentChannelRoutes.Use(middleware.SessionAuthMiddleware())
+	// paymentChannelRoutes.Use(middleware.SessionAuthMiddleware())
 	{
 		paymentChannelRoutes.POST("/create", handlers.CreatePaymentChannelHandler)
 		paymentChannelRoutes.GET("/list", handlers.GetPaymentChannelsHandler)
@@ -30,7 +29,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 	}
 
 	transactionTypeRoutes := e.Group("/transaction-types")
-	transactionTypeRoutes.Use(middleware.SessionAuthMiddleware())
+	// transactionTypeRoutes.Use(middleware.SessionAuthMiddleware())
 	{
 		transactionTypeRoutes.POST("/create", handlers.CreateTransactionTypeHandler)
 		transactionTypeRoutes.GET("/list", handlers.GetTransactionTypesHandler)
@@ -47,7 +46,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 	}
 
 	merchantFeeProfileRoutes := e.Group("/merchant-fee-profiles")
-	merchantFeeProfileRoutes.Use(middleware.SessionAuthMiddleware())
+	// merchantFeeProfileRoutes.Use(middleware.SessionAuthMiddleware())
 	{
 		merchantFeeProfileRoutes.POST("/create", handlers.CreateMerchantFeeProfileHandler)
 		merchantFeeProfileRoutes.GET("/list", handlers.GetMerchantFeeProfilesHandler)
@@ -57,7 +56,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 	}
 
 	channelFeeBandsRoutes := e.Group("/channel-fee-bands")
-	channelFeeBandsRoutes.Use(middleware.SessionAuthMiddleware())
+	// channelFeeBandsRoutes.Use(middleware.SessionAuthMiddleware())
 	{
 		channelFeeBandsRoutes.POST("/create", handlers.CreateChannelFeeBandHandler)
 		channelFeeBandsRoutes.GET("/list", handlers.GetChannelFeeBandsHandler)
@@ -67,7 +66,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 	}
 
 	profileFeeBandsRoutes := e.Group("/profile-fee-bands")
-	profileFeeBandsRoutes.Use(middleware.SessionAuthMiddleware())
+	// profileFeeBandsRoutes.Use(middleware.SessionAuthMiddleware())
 	{
 		profileFeeBandsRoutes.POST("/create", handlers.CreateProfileFeeBandsHandler)
 		profileFeeBandsRoutes.GET("/list", handlers.GetProfileFeeBandsHandler)
@@ -77,7 +76,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 	}
 
 	prefixesRoutes := e.Group("/prefixes")
-	prefixesRoutes.Use(middleware.SessionAuthMiddleware())
+	// prefixesRoutes.Use(middleware.SessionAuthMiddleware())
 	{
 		prefixesRoutes.POST("/create", handlers.CreatePrefixHandler)
 		prefixesRoutes.GET("/list", handlers.GetPrefixesHandler)
@@ -92,7 +91,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 	}
 
 	subscriptionRoutes := e.Group("/subscriptions")
-	subscriptionRoutes.Use(middleware.SessionAuthMiddleware())
+	// subscriptionRoutes.Use(middleware.SessionAuthMiddleware())
 	{
 		subscriptionRoutes.POST("/create", handlers.CreateSubscriptionHandler)
 		subscriptionRoutes.GET("/list", handlers.GetSubscriptionsHandler)
@@ -102,7 +101,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 	}
 
 	merchantSubscriptionRoutes := e.Group("/merchant-subscriptions")
-	merchantSubscriptionRoutes.Use(middleware.SessionAuthMiddleware())
+	// merchantSubscriptionRoutes.Use(middleware.SessionAuthMiddleware())
 	{
 		merchantSubscriptionRoutes.POST("/create", handlers.CreateMerchantSubscriptionHandler)
 		merchantSubscriptionRoutes.GET("/list", handlers.GetMerchantSubscriptionsHandler)
@@ -111,7 +110,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 	}
 
 	merchantPaymentChannelsRoutes := e.Group("/merchant-payment-channels")
-	merchantPaymentChannelsRoutes.Use(middleware.SessionAuthMiddleware())
+	// merchantPaymentChannelsRoutes.Use(middleware.SessionAuthMiddleware())
 	{
 		merchantPaymentChannelsRoutes.POST("/create", handlers.CreateMerchantPaymentChannelHandler)
 		merchantPaymentChannelsRoutes.GET("/list", handlers.GetMerchantPaymentChannelsHandler)
@@ -121,7 +120,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 	}
 
 	merchantApiKeyRoutes := e.Group("/merchant-api-keys")
-	merchantApiKeyRoutes.Use(middleware.SessionAuthMiddleware())
+	// merchantApiKeyRoutes.Use(middleware.SessionAuthMiddleware())
 	{
 		merchantApiKeyRoutes.POST("/create", handlers.CreateMerchantAPIKeysHandler)
 		merchantApiKeyRoutes.GET("/list", handlers.GetMerchantAPIKeysHandler)
@@ -132,7 +131,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 	}
 
 	merchantIpRoutes := e.Group("/merchant-ips")
-	merchantIpRoutes.Use(middleware.SessionAuthMiddleware())
+	// merchantIpRoutes.Use(middleware.SessionAuthMiddleware())
 	{
 		merchantIpRoutes.POST("/add", handlers.AddMerchantIPHandler)
 		merchantIpRoutes.GET("/list", handlers.GetMerchantIPsHandler)
@@ -142,7 +141,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 	}
 
 	providersRoutes := e.Group("/providers")
-	providersRoutes.Use(middleware.SessionAuthMiddleware())
+	// providersRoutes.Use(middleware.SessionAuthMiddleware())
 	{
 		providersRoutes.POST("/create", handlers.CreateProviderHandler)
 		providersRoutes.GET("/list", handlers.GetProvidersHandler)

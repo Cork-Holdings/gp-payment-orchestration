@@ -16,7 +16,7 @@ func Reciever(app *global.App, msg amqp091.Delivery) error {
 	return nil
 }
 
-func respond(app *global.App, msg amqp091.Delivery, response []byte) error {
+func Respond(app *global.App, msg amqp091.Delivery, response []byte) error {
 	if msg.ReplyTo == "" {
 		return nil
 	}

@@ -15,6 +15,7 @@ import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/proto/merchant_api_keys_proto"
 	"github.com/Cork-Holdings/gp_payment_orchestration/utils"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 func CreateMerchantKeys(merchantID string) (*MerchantAPIKey, error) {
@@ -28,11 +29,27 @@ func CreateMerchantKeys(merchantID string) (*MerchantAPIKey, error) {
 	clientID := common.GenerateRandomString(32)
 	clientSecret := common.GenerateRandomString(32)
 
+	encryptionKey := []byte(os.Getenv("ENCRYPTION_KEY"))
+
+	if len(encryptionKey) == 0 {
+		return nil, errors.New("ENCRYPTION_KEY not set")
+	}
+
+	eClientSecret, err := utils.Encrypt(clientSecret, encryptionKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encrypt client secret: %v", err)
+	}
+
+	eClientID, err := utils.Encrypt(clientID, encryptionKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encrypt client ID: %v", err)
+	}
+
 	merchantAPIKey := MerchantAPIKey{
 		ID:           uuid.New(),
 		MerchantID:   uuid.MustParse(merchantID),
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
+		ClientID:     eClientID,
+		ClientSecret: eClientSecret,
 		Status:       "active",
 	}
 
@@ -130,11 +147,29 @@ func GetMerchantAPIKeys(req *merchant_api_keys_proto.GetMerchantAPIKeysRequest) 
 
 	var merchantRes []*merchant_api_keys_proto.MerchantAPIKey
 	for _, merchantAPIKey := range merchantAPIKeys {
+
+		var decryptedClientID, decryptedClientSecret string
+		encryptionKey := []byte(os.Getenv("ENCRYPTION_KEY"))
+
+		if len(encryptionKey) == 0 {
+			return nil, errors.New("ENCRYPTION_KEY not set")
+		}
+
+		decryptedClientID, err := utils.Decrypt(merchantAPIKey.ClientID, encryptionKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decrypt client ID: %v", err)
+		}
+
+		decryptedClientSecret, err = utils.Decrypt(merchantAPIKey.ClientSecret, encryptionKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decrypt client secret: %v", err)
+		}
+
 		merchantRes = append(merchantRes, &merchant_api_keys_proto.MerchantAPIKey{
 			Id:            merchantAPIKey.ID.String(),
 			MerchantId:    merchantAPIKey.MerchantID.String(),
-			ClientId:      merchantAPIKey.ClientID,
-			ClientSecret:  merchantAPIKey.ClientSecret,
+			ClientId:      decryptedClientID,
+			ClientSecret:  decryptedClientSecret,
 			Pin:           merchantAPIKey.Pin,
 			AuthSignature: merchantAPIKey.AuthSignature,
 			Status:        merchantAPIKey.Status,
@@ -153,16 +188,33 @@ func UpdateMerchantAPIKey(req *merchant_api_keys_proto.EditMerchantAPIKeyRequest
 
 	updates := map[string]interface{}{}
 	if req.ClientSecret != "" {
-		updates["client_secret"] = req.ClientSecret
+
+		encryptedSecret, err := encryptSecret(req.ClientSecret)
+
+		if err != nil {
+			return err
+		}
+
+		updates["client_secret"] = encryptedSecret
 	}
 	if req.Pin != "" {
-		updates["pin"] = req.Pin
+
+		encryptedPin, err := encryptSecret(req.Pin)
+
+		if err != nil {
+			return err
+		}
+
+		updates["pin"] = encryptedPin
 	}
 	if req.AuthSignature != "" {
 		updates["auth_signature"] = req.AuthSignature
 	}
 	if req.Status != "" {
 		updates["status"] = req.Status
+	}
+	if len(updates) == 0 {
+		return errors.New("no fields to update")
 	}
 	tx := global.GetDB().Begin()
 	defer func() {
@@ -210,108 +262,168 @@ func GenerateAuthSignature(req *merchant_api_keys_proto.GenerateAuthSignatureReq
 
 	merchantID, err := uuid.Parse(req.MerchantId)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("invalid merchant id: %w", err)
 	}
 
-	//Check if merchant has any API keys
-	var merchantAPIKeys []MerchantAPIKey
-	if err := global.GetDB().Model(&MerchantAPIKey{}).Where("merchant_id = ?", merchantID).Find(&merchantAPIKeys).Error; err != nil {
-		return "", err
-	}
-
-	if len(merchantAPIKeys) == 0 {
-		return "", errors.New("merchant has no API keys")
-	}
-
-	//If Pin is not set update it with the pin from the request
-	if merchantAPIKeys[0].Pin == "" {
-
-		encryptionKey := []byte(os.Getenv("ENCRYPTION_KEY"))
-		if len(encryptionKey) == 0 {
-			return "", errors.New("ENCRYPTION_KEY not set")
-		}
-
-		// Encrypt the Pin
-		ePIN, err := utils.Encrypt(req.Pin, encryptionKey)
-		if err != nil {
-			return "", err
-		}
-
-		merchantAPIKeys[0].Pin = ePIN
-		if err := global.GetDB().Model(&MerchantAPIKey{}).Where("id = ?", merchantAPIKeys[0].ID).Updates(map[string]interface{}{"pin": ePIN}).Error; err != nil {
-			return "", err
-		}
-	}
-
-	//Decrypt the Pin from the database
 	encryptionKey := []byte(os.Getenv("ENCRYPTION_KEY"))
 	if len(encryptionKey) == 0 {
 		return "", errors.New("ENCRYPTION_KEY not set")
 	}
 
-	decryptedPIN, err := utils.Decrypt(merchantAPIKeys[0].Pin, encryptionKey)
+	db := global.GetDB()
+
+	// Get active merchant API key
+	var merchantAPIKey MerchantAPIKey
+
+	err = db.
+		Where(
+			"merchant_id = ? AND status = ?",
+			merchantID,
+			"active",
+		).
+		First(&merchantAPIKey).Error
+
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", errors.New("merchant has no active API keys")
+		}
 		return "", err
 	}
 
-	//If Pin exists check if it is correct
-	if merchantAPIKeys[0].Pin != "" {
+	// Handle PIN
+	var decryptedPIN string
+
+	if merchantAPIKey.Pin == "" {
+
+		if req.Pin == "" {
+			return "", errors.New("pin is required")
+		}
+
+		encryptedPin, err := utils.Encrypt(req.Pin, encryptionKey)
+		if err != nil {
+			return "", fmt.Errorf("failed to encrypt pin: %w", err)
+		}
+
+		if err := db.
+			Model(&MerchantAPIKey{}).
+			Where("id = ?", merchantAPIKey.ID).
+			Update("pin", encryptedPin).Error; err != nil {
+			return "", err
+		}
+
+		decryptedPIN = req.Pin
+
+	} else {
+
+		decryptedPIN, err = utils.Decrypt(
+			merchantAPIKey.Pin,
+			encryptionKey,
+		)
+
+		if err != nil {
+			return "", fmt.Errorf("failed to decrypt pin: %w", err)
+		}
+
 		if decryptedPIN != req.Pin {
 			return "", errors.New("invalid pin")
 		}
 	}
 
-	//Generate the auth signature
+	// Decrypt client credentials
 
-	clientID := merchantAPIKeys[0].ClientID
-	clientSecret := merchantAPIKeys[0].ClientSecret
+	clientID, err := utils.Decrypt(
+		merchantAPIKey.ClientID,
+		encryptionKey,
+	)
 
-	//Decrypt the Pin from the database
-	pin := req.Pin
-	message := fmt.Sprintf("%s:%s", clientID, pin)
-
-	signature := hmac.New(sha256.New, []byte(clientSecret))
-	signature.Write([]byte(message))
-
-	signatureString := hex.EncodeToString(signature.Sum(nil))
-
-	//Update the auth signature in the database
-	if err := global.GetDB().Model(&MerchantAPIKey{}).Where("id = ?", merchantAPIKeys[0].ID).Updates(map[string]interface{}{"auth_signature": signatureString}).Error; err != nil {
-		return "", err
+	if err != nil {
+		return "", fmt.Errorf("failed to decrypt client id: %w", err)
 	}
 
-	return signatureString, nil
+	clientSecret, err := utils.Decrypt(
+		merchantAPIKey.ClientSecret,
+		encryptionKey,
+	)
+
+	if err != nil {
+		return "", fmt.Errorf("failed to decrypt client secret: %w", err)
+	}
+
+	// Generate HMAC signature
+	message := fmt.Sprintf(
+		"%s:%s",
+		clientID,
+		decryptedPIN,
+	)
+
+	h := hmac.New(
+		sha256.New,
+		[]byte(clientSecret),
+	)
+
+	h.Write([]byte(message))
+
+	signature := hex.EncodeToString(h.Sum(nil))
+
+	// Save generated signature
+	err = db.
+		Model(&MerchantAPIKey{}).
+		Where("id = ?", merchantAPIKey.ID).
+		Update(
+			"auth_signature",
+			signature,
+		).Error
+
+	if err != nil {
+		return "", fmt.Errorf("failed to save auth signature: %w", err)
+	}
+
+	return signature, nil
+}
+func encryptSecret(value string) (string, error) {
+
+	key := []byte(os.Getenv("ENCRYPTION_KEY"))
+
+	if len(key) == 0 {
+		return "", errors.New("ENCRYPTION_KEY not set")
+	}
+
+	return utils.Encrypt(value, key)
 }
 
 func SetPin(req *merchant_api_keys_proto.SetPinRequest) error {
 
-	parsedMerchantID, err := uuid.Parse(req.MerchantId)
+	merchantID, err := uuid.Parse(req.MerchantId)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid merchant id: %w", err)
 	}
 
-	// Encrypt the Pin
+	if req.Pin == "" {
+		return errors.New("pin cannot be empty")
+	}
+
+	if len(req.Pin) < 8 {
+		return errors.New("pin must be at least 8 characters long")
+	}
+
 	encryptionKey := []byte(os.Getenv("ENCRYPTION_KEY"))
 	if len(encryptionKey) == 0 {
 		return errors.New("ENCRYPTION_KEY not set")
 	}
 
-	//Ensure Pin is not empty
-	if req.Pin == "" {
-		return errors.New("pin cannot be empty")
-	}
-
-	//Ensure pin is at least 8 characters long
-	if len(req.Pin) < 8 {
-		return errors.New("pin must be at least 8 characters long")
-	}
-
-	ePIN, err := utils.Encrypt(req.Pin, encryptionKey)
+	encryptedPIN, err := utils.Encrypt(req.Pin, encryptionKey)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to encrypt pin: %w", err)
 	}
 
-	tx := global.GetDB().Begin()
+	db := global.GetDB()
+
+	tx := db.Begin()
+
+	if tx.Error != nil {
+		return tx.Error
+	}
+
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
@@ -319,13 +431,35 @@ func SetPin(req *merchant_api_keys_proto.SetPinRequest) error {
 		}
 	}()
 
-	if err := global.GetDB().Model(&MerchantAPIKey{}).Where("merchant_id = ?", parsedMerchantID).Updates(map[string]interface{}{"pin": ePIN}).Error; err != nil {
+	var merchantAPIKey MerchantAPIKey
+
+	if err := tx.
+		Where(
+			"merchant_id = ? AND status = ?",
+			merchantID,
+			"active",
+		).
+		First(&merchantAPIKey).Error; err != nil {
+
+		tx.Rollback()
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("merchant API key not found")
+		}
+
+		return err
+	}
+
+	if err := tx.
+		Model(&MerchantAPIKey{}).
+		Where("id = ?", merchantAPIKey.ID).
+		Update("pin", encryptedPIN).Error; err != nil {
+
 		tx.Rollback()
 		return err
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
 		return err
 	}
 
