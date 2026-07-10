@@ -145,7 +145,7 @@ func Seed(db *gorm.DB) error {
 	var bands []paymentchannels.ChannelFeeBands
 
 	collectionChannels := []string{"MTN (Collection)", "Airtel (Collection)", "Zamtel (Collection)", "ZEDMOBILE (Collection)"}
-	
+
 	feeBands := [][]float64{
 		{1, 150, 0.50},
 		{151, 300, 1.00},
@@ -173,9 +173,6 @@ func Seed(db *gorm.DB) error {
 		}
 	}
 
-	if err := db.Create(&bands).Error; err != nil {
-		return err
-	}
 	if err := db.Create(&bands).Error; err != nil {
 		return err
 	}
