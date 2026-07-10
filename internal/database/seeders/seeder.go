@@ -2,7 +2,9 @@ package seeders
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/feeprofiles"
@@ -50,8 +52,37 @@ func Seed(db *gorm.DB) error {
 	provAirtel := providers.Provider{ID: uuid.New(), Name: "Airtel", Code: "AIRTEL", Status: "active"}
 	provMTN := providers.Provider{ID: uuid.New(), Name: "MTN", Code: "MTN", Status: "active"}
 	provZamtel := providers.Provider{ID: uuid.New(), Name: "Zamtel", Code: "ZAMTEL", Status: "active"}
-	if err := db.Create(&[]providers.Provider{provAirtel, provMTN, provZamtel}).Error; err != nil {
+	provZedmobile := providers.Provider{ID: uuid.New(), Name: "ZEDMOBILE", Code: "ZEDMOBILE", Status: "active"}
+
+	mobileProviders := []providers.Provider{provAirtel, provMTN, provZamtel, provZedmobile}
+	if err := db.Create(&mobileProviders).Error; err != nil {
 		return err
+	}
+
+	// Zambian Banks
+	banks := []string{
+		"FNB Zambia",
+		"Zanaco",
+		"Standard Chartered Bank Zambia",
+		"Absa Bank Zambia",
+		"Access Bank Zambia",
+		"Stanbic Bank Zambia",
+		"Investrust Bank",
+		"Ecobank Zambia",
+		"United Bank for Africa (UBA)",
+		"Bank of China Zambia",
+	}
+
+	for _, bankName := range banks {
+		bankCode := strings.ToUpper(strings.ReplaceAll(bankName, " ", "_"))
+		if err := db.Create(&providers.Provider{
+			ID:     uuid.New(),
+			Name:   bankName,
+			Code:   bankCode,
+			Status: "active",
+		}).Error; err != nil {
+			return err
+		}
 	}
 
 	// 2. Subscriptions
@@ -94,6 +125,8 @@ func Seed(db *gorm.DB) error {
 		{ID: uuid.New(), Name: "MTN (Disbursement)", Code: "mtn_disburse", ProviderID: provMTN.ID, SubscriptionID: subMM.ID, TransactionTypeID: ttDisbursement.ID, FeeType: "percentage", ProviderFee: "0.00", Status: "active"},
 		{ID: uuid.New(), Name: "Zamtel (Collection)", Code: "zamtel", ProviderID: provZamtel.ID, SubscriptionID: subMM.ID, TransactionTypeID: ttCollection.ID, FeeType: "band", ProviderFee: "0.00", Status: "active"},
 		{ID: uuid.New(), Name: "Zamtel (Disbursement)", Code: "zamtel_disburse", ProviderID: provZamtel.ID, SubscriptionID: subMM.ID, TransactionTypeID: ttDisbursement.ID, FeeType: "percentage", ProviderFee: "0.00", Status: "active"},
+		{ID: uuid.New(), Name: "ZEDMOBILE (Collection)", Code: "zedmobile", ProviderID: provZedmobile.ID, SubscriptionID: subMM.ID, TransactionTypeID: ttCollection.ID, FeeType: "band", ProviderFee: "0.00", Status: "active"},
+		{ID: uuid.New(), Name: "ZEDMOBILE (Disbursement)", Code: "zedmobile_disburse", ProviderID: provZedmobile.ID, SubscriptionID: subMM.ID, TransactionTypeID: ttDisbursement.ID, FeeType: "percentage", ProviderFee: "0.00", Status: "active"},
 	}
 	for i := range channels {
 		if err := db.Create(&channels[i]).Error; err != nil {
@@ -108,26 +141,40 @@ func Seed(db *gorm.DB) error {
 	}
 
 	// 5. Channel Fee Bands (Provider Fees - MNO costs)
-	// Realistic bands based on industry standards for Airtel, MTN, Zamtel
-	bands := []paymentchannels.ChannelFeeBands{
-		// MTN Collection (tiered fixed bands)
-		{ID: uuid.New(), Name: "MTN Collection 0.01-50", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 0.01, MaxAmount: 50.00, ChargeAmount: 0.50, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "MTN Collection 50-200", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 50.01, MaxAmount: 200.00, ChargeAmount: 1.00, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "MTN Collection 200-500", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 200.01, MaxAmount: 500.00, ChargeAmount: 2.00, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "MTN Collection 500-1000", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 500.01, MaxAmount: 1000.00, ChargeAmount: 3.00, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "MTN Collection 1000+", PaymentChannelID: channelMap["MTN (Collection)"], MinAmount: 1000.01, MaxAmount: 0, ChargeAmount: 0.35, ChargeType: "percentage", Status: "active"},
+	// Realistic bands based on industry standards for Airtel, MTN, Zamtel, ZEDMOBILE
+	var bands []paymentchannels.ChannelFeeBands
 
-		// Airtel Collection (tiered fixed bands)
-		{ID: uuid.New(), Name: "Airtel Collection 0.01-75", PaymentChannelID: channelMap["Airtel (Collection)"], MinAmount: 0.01, MaxAmount: 75.00, ChargeAmount: 0.50, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "Airtel Collection 75-250", PaymentChannelID: channelMap["Airtel (Collection)"], MinAmount: 75.01, MaxAmount: 250.00, ChargeAmount: 1.20, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "Airtel Collection 250-750", PaymentChannelID: channelMap["Airtel (Collection)"], MinAmount: 250.01, MaxAmount: 750.00, ChargeAmount: 2.50, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "Airtel Collection 750+", PaymentChannelID: channelMap["Airtel (Collection)"], MinAmount: 750.01, MaxAmount: 0, ChargeAmount: 0.40, ChargeType: "percentage", Status: "active"},
+	collectionChannels := []string{"MTN (Collection)", "Airtel (Collection)", "Zamtel (Collection)", "ZEDMOBILE (Collection)"}
+	
+	feeBands := [][]float64{
+		{1, 150, 0.50},
+		{151, 300, 1.00},
+		{301, 500, 1.00},
+		{501, 1000, 1.50},
+		{1001, 3000, 2.80},
+		{3001, 5000, 4.00},
+		{5001, 10000, 5.50},
+	}
 
-		// Zamtel Collection (tiered fixed bands)
-		{ID: uuid.New(), Name: "Zamtel Collection 0.01-100", PaymentChannelID: channelMap["Zamtel (Collection)"], MinAmount: 0.01, MaxAmount: 100.00, ChargeAmount: 0.45, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "Zamtel Collection 100-300", PaymentChannelID: channelMap["Zamtel (Collection)"], MinAmount: 100.01, MaxAmount: 300.00, ChargeAmount: 1.00, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "Zamtel Collection 300-1000", PaymentChannelID: channelMap["Zamtel (Collection)"], MinAmount: 300.01, MaxAmount: 1000.00, ChargeAmount: 2.00, ChargeType: "fixed", Status: "active"},
-		{ID: uuid.New(), Name: "Zamtel Collection 1000+", PaymentChannelID: channelMap["Zamtel (Collection)"], MinAmount: 1000.01, MaxAmount: 0, ChargeAmount: 0.30, ChargeType: "percentage", Status: "active"},
+	for _, cName := range collectionChannels {
+		if cID, ok := channelMap[cName]; ok {
+			for _, b := range feeBands {
+				bands = append(bands, paymentchannels.ChannelFeeBands{
+					ID:               uuid.New(),
+					Name:             fmt.Sprintf("%s %.0f-%.0f", cName, b[0], b[1]),
+					PaymentChannelID: cID,
+					MinAmount:        b[0],
+					MaxAmount:        b[1],
+					ChargeAmount:     b[2],
+					ChargeType:       "fixed",
+					Status:           "active",
+				})
+			}
+		}
+	}
+
+	if err := db.Create(&bands).Error; err != nil {
+		return err
 	}
 	if err := db.Create(&bands).Error; err != nil {
 		return err
@@ -145,6 +192,7 @@ func Seed(db *gorm.DB) error {
 		{"26096", []string{"MTN (Collection)", "MTN (Disbursement)"}},
 		{"26076", []string{"MTN (Collection)", "MTN (Disbursement)"}},
 		{"26095", []string{"Zamtel (Collection)", "Zamtel (Disbursement)"}},
+		{"26078", []string{"ZEDMOBILE (Collection)", "ZEDMOBILE (Disbursement)"}},
 	}
 
 	for _, p := range prefixData {
