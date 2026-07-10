@@ -1,6 +1,7 @@
 package merchantapihandlers
 
 import (
+	"fmt"
 	"net/http"
 	"regexp"
 
@@ -15,6 +16,10 @@ func HandleGenerateTokenHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request: " + err.Error()})
 		return
 	}
+
+	fmt.Println("=============================================================")
+	fmt.Println("Request: ", req)
+	fmt.Println("=============================================================")
 
 	if req.ClientID == "" || req.ClientSecret == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing client_id or client_secret"})
