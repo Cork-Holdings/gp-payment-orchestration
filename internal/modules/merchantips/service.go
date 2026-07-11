@@ -1,6 +1,7 @@
 package merchantips
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -60,17 +61,18 @@ func GetMerchantIPs(req *merchant_ips_proto.GetMerchantIPsRequest) (*merchant_ip
 
 	page := req.Page
 	pageSize := req.PageSize
-	searchQuery := req.SearchQuery
+	status := req.Status
 
 	limit := uint(pageSize)
 	offset := uint((page - 1) * pageSize)
 
 	query := global.GetDB().Model(&MerchantIP{})
 
-	if searchQuery != "" {
-		if _, err := uuid.Parse(searchQuery); err == nil {
-			query = query.Where("merchant_id = ?", req.MerchantId)
-		}
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+	if req.MerchantId != "" {
+		query = query.Where("merchant_id = ?", req.MerchantId)
 	}
 
 	total := int64(0)
@@ -85,16 +87,34 @@ func GetMerchantIPs(req *merchant_ips_proto.GetMerchantIPsRequest) (*merchant_ip
 
 	var merchantRes []*merchant_ips_proto.MerchantIP
 	for _, merchantIP := range merchantIPs {
+
+		approvedBy := ""
+		if merchantIP.ApprovedBy != uuid.Nil {
+			approvedBy = merchantIP.ApprovedBy.String()
+		}
+		rejectedBy := ""
+		if merchantIP.RejectedBy != uuid.Nil {
+			rejectedBy = merchantIP.RejectedBy.String()
+		}
+		approvedAt := ""
+		if merchantIP.ApprovedAt != nil {
+			approvedAt = merchantIP.ApprovedAt.Format(time.RFC3339)
+		}
+		rejectedAt := ""
+		if merchantIP.RejectedAt != nil {
+			rejectedAt = merchantIP.RejectedAt.Format(time.RFC3339)
+		}
+
 		merchantRes = append(merchantRes, &merchant_ips_proto.MerchantIP{
 			Id:             merchantIP.ID.String(),
 			MerchantId:     merchantIP.MerchantID.String(),
 			IpAddress:      merchantIP.IPAddress,
 			Status:         merchantIP.Status,
 			SubmittedBy:    merchantIP.SubmittedBy.String(),
-			ApprovedBy:     merchantIP.ApprovedBy.String(),
-			ApprovedAt:     merchantIP.ApprovedAt.Format(time.RFC3339),
-			RejectedBy:     merchantIP.RejectedBy.String(),
-			RejectedAt:     merchantIP.RejectedAt.Format(time.RFC3339),
+			ApprovedBy:     approvedBy,
+			ApprovedAt:     approvedAt,
+			RejectedBy:     rejectedBy,
+			RejectedAt:     rejectedAt,
 			RejectedReason: merchantIP.RejectedReason,
 		})
 	}
@@ -110,31 +130,37 @@ func GetMerchantIPs(req *merchant_ips_proto.GetMerchantIPsRequest) (*merchant_ip
 func UpdateMerchantIP(req *merchant_ips_proto.EditMerchantIPRequest) error {
 
 	updates := map[string]interface{}{}
+
+	//Check if the merchant IP exists
+	var merchantIP MerchantIP
+	if err := global.GetDB().Model(&MerchantIP{}).Where("id = ?", req.Id).First(&merchantIP).Error; err != nil {
+		return err
+	}
+
+	if merchantIP.Status == "approved" || merchantIP.Status == "rejected" {
+		return fmt.Errorf("merchant IP is already %s", merchantIP.Status)
+	}
+
 	if req.IpAddress != "" {
 		updates["ip_address"] = req.IpAddress
 	}
 	if req.Status != "" {
 		updates["status"] = req.Status
+
+		switch req.Status {
+		case "approved":
+			approvedAt := time.Now()
+			updates["approved_at"] = approvedAt
+		case "rejected":
+			rejectedAt := time.Now()
+			updates["rejected_at"] = rejectedAt
+		}
 	}
 	if req.ApprovedBy != "" {
 		updates["approved_by"] = uuid.MustParse(req.ApprovedBy)
 	}
-	if req.ApprovedAt != "" {
-		approvedAt, err := time.Parse(time.RFC3339, req.ApprovedAt)
-		if err != nil {
-			return err
-		}
-		updates["approved_at"] = approvedAt
-	}
 	if req.RejectedBy != "" {
 		updates["rejected_by"] = uuid.MustParse(req.RejectedBy)
-	}
-	if req.RejectedAt != "" {
-		rejectedAt, err := time.Parse(time.RFC3339, req.RejectedAt)
-		if err != nil {
-			return err
-		}
-		updates["rejected_at"] = rejectedAt
 	}
 	if req.RejectedReason != "" {
 		updates["rejected_reason"] = req.RejectedReason

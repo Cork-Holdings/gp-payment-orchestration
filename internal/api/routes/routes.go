@@ -133,7 +133,7 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 	merchantIpRoutes := e.Group("/merchant-ips")
 	// merchantIpRoutes.Use(middleware.SessionAuthMiddleware())
 	{
-		merchantIpRoutes.POST("/add", handlers.AddMerchantIPHandler)
+		merchantIpRoutes.POST("/create", handlers.AddMerchantIPHandler)
 		merchantIpRoutes.GET("/list", handlers.GetMerchantIPsHandler)
 		merchantIpRoutes.GET("/get/:id", handlers.GetMerchantIPHandler)
 		merchantIpRoutes.PUT("/update", handlers.UpdateMerchantIPHandler)

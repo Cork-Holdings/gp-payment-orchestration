@@ -225,7 +225,7 @@ type GetMerchantIPsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
 	PageSize      int32                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	SearchQuery   string                 `protobuf:"bytes,3,opt,name=search_query,json=searchQuery,proto3" json:"search_query,omitempty"`
+	Status        string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
 	MerchantId    string                 `protobuf:"bytes,4,opt,name=merchant_id,json=merchantId,proto3" json:"merchant_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -275,9 +275,9 @@ func (x *GetMerchantIPsRequest) GetPageSize() int32 {
 	return 0
 }
 
-func (x *GetMerchantIPsRequest) GetSearchQuery() string {
+func (x *GetMerchantIPsRequest) GetStatus() string {
 	if x != nil {
-		return x.SearchQuery
+		return x.Status
 	}
 	return ""
 }
@@ -491,11 +491,11 @@ const file_merchant_ips_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\v \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\f \x01(\tR\tupdatedAt\"\x8c\x01\n" +
+	"updated_at\x18\f \x01(\tR\tupdatedAt\"\x81\x01\n" +
 	"\x15GetMerchantIPsRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12!\n" +
-	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\x12\x1f\n" +
+	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x16\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\x12\x1f\n" +
 	"\vmerchant_id\x18\x04 \x01(\tR\n" +
 	"merchantId\"\xb4\x01\n" +
 	"\x16GetMerchantIPsResponse\x12;\n" +
