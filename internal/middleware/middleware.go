@@ -48,12 +48,19 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 
 		// Extract IP from X-Forwarded-For if behind a proxy, fallback to client IP
 		clientIP := c.GetHeader("X-Forwarded-For")
+
 		if clientIP == "" {
 			clientIP = c.ClientIP()
 		} else {
 			ips := strings.Split(clientIP, ",")
 			clientIP = strings.TrimSpace(ips[0])
 		}
+
+		fmt.Println("RemoteAddr:", c.Request.RemoteAddr)
+		fmt.Println("ClientIP():", c.ClientIP())
+		fmt.Println("X-Forwarded-For:", c.GetHeader("X-Forwarded-For"))
+		fmt.Println("X-Real-IP:", c.GetHeader("X-Real-IP"))
+		fmt.Println("Forwarded:", c.GetHeader("Forwarded"))
 
 		//test webhook
 
@@ -81,11 +88,6 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 		c.Set("tenant_id", res.TenantID)
 		c.Set("merchant_id", res.MerchantID)
 
-		fmt.Println("RemoteAddr:", c.Request.RemoteAddr)
-		fmt.Println("ClientIP():", c.ClientIP())
-		fmt.Println("X-Forwarded-For:", c.GetHeader("X-Forwarded-For"))
-		fmt.Println("X-Real-IP:", c.GetHeader("X-Real-IP"))
-		fmt.Println("Forwarded:", c.GetHeader("Forwarded"))
 		c.Next()
 	}
 }
