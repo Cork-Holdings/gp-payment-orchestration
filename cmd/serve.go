@@ -45,7 +45,7 @@ var serveCmd = &cobra.Command{
 	Short: "Serve app",
 	Long:  `command is used to serve the app`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("Starting api gateway")
+		log.Println("Starting payment orchestrator")
 
 		app := global.New()
 		RegisterAppModels(app)

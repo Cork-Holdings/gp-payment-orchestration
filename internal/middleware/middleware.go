@@ -80,6 +80,12 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 		c.Set("client_id", clientID)
 		c.Set("tenant_id", res.TenantID)
 		c.Set("merchant_id", res.MerchantID)
+
+		fmt.Println("RemoteAddr:", c.Request.RemoteAddr)
+		fmt.Println("ClientIP():", c.ClientIP())
+		fmt.Println("X-Forwarded-For:", c.GetHeader("X-Forwarded-For"))
+		fmt.Println("X-Real-IP:", c.GetHeader("X-Real-IP"))
+		fmt.Println("Forwarded:", c.GetHeader("Forwarded"))
 		c.Next()
 	}
 }
