@@ -11,7 +11,11 @@ func Run(app *global.App) (*asynq.Server, error) {
 	mux := asynq.NewServeMux()
 
 	var srv = asynq.NewServer(
-		asynq.RedisClientOpt{Addr: os.Getenv("REDIS_URL")},
+		asynq.RedisClientOpt{
+			Addr:     os.Getenv("REDIS_URL"),
+			Password: os.Getenv("REDIS_PASSWORD"),
+			Username: os.Getenv("REDIS_USERNAME"),
+		},
 		asynq.Config{
 			Concurrency: 10,
 		},

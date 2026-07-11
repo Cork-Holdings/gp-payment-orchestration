@@ -14,7 +14,6 @@ import (
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/database/seeders"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/mq"
-	"github.com/Cork-Holdings/gp_payment_orchestration/internal/tasks"
 	"github.com/spf13/cobra"
 )
 
@@ -88,20 +87,19 @@ var serveCmd = &cobra.Command{
 		wg.Add(1)
 
 		// Background Tasks
-		go func() {
-			jobQueue, err := tasks.Run(app)
-			if err != nil {
-				log.Printf("task runner stopped: %v", err)
-				cancel()
-				return
-			}
+		// go func() {
+		// 	jobQueue, err := tasks.Run(app)
+		// 	if err != nil {
+		// 		log.Printf("task runner stopped: %v", err)
+		// 		cancel()
+		// 		return
+		// 	}
 
-			<-ctx.Done()
+		// 	<-ctx.Done()
 
-			log.Println("Shutting down job queue...")
-			jobQueue.Shutdown()
-		}()
-		wg.Add(1)
+		// 	log.Println("Shutting down job queue...")
+		// 	jobQueue.Shutdown()
+		// }()
 
 		// MQ Consumer
 		go func() {
