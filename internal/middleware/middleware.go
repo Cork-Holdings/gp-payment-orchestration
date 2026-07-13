@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -56,13 +56,7 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 			clientIP = strings.TrimSpace(ips[0])
 		}
 
-		fmt.Println("RemoteAddr:", c.Request.RemoteAddr)
-		fmt.Println("ClientIP():", c.ClientIP())
-		fmt.Println("X-Forwarded-For:", c.GetHeader("X-Forwarded-For"))
-		fmt.Println("X-Real-IP:", c.GetHeader("X-Real-IP"))
-		fmt.Println("Forwarded:", c.GetHeader("Forwarded"))
-
-		//test webhook
+		log.Printf("auth validation started client_id=%s client_ip=%s", clientID, clientIP)
 
 		res, err := verifier.VerifyTokenAndIP(c.Request.Context(), &merchantapis.VerifyRequest{
 			Token:     token,
@@ -71,14 +65,14 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 		})
 
 		if err != nil {
-			fmt.Printf("[Middleware] Auth error: %v\n", err)
+			log.Printf("auth validation error client_id=%s client_ip=%s error=%v", clientID, clientIP, err)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "auth service validation failed: " + err.Error()})
 			c.Abort()
 			return
 		}
 
 		if !res.Valid {
-			fmt.Printf("[Middleware] Auth failed: %s (ClientID: %s, IP: %s)\n", res.ErrorMessage, clientID, clientIP)
+			log.Printf("auth validation failed client_id=%s merchant_id=%s client_ip=%s reason=%s", clientID, res.MerchantID, clientIP, res.ErrorMessage)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": res.ErrorMessage})
 			c.Abort()
 			return
@@ -87,6 +81,7 @@ func AuthMiddleware(app *global.App, verifier TokenVerifier) gin.HandlerFunc {
 		c.Set("client_id", clientID)
 		c.Set("tenant_id", res.TenantID)
 		c.Set("merchant_id", res.MerchantID)
+		log.Printf("auth validation succeeded client_id=%s merchant_id=%s tenant_id=%s", clientID, res.MerchantID, res.TenantID)
 
 		c.Next()
 	}

@@ -122,6 +122,7 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 	ctx := context.Background()
 	db := global.GetDB()
 	cache := global.GetCache()
+	log.Printf("fee calculation started merchant_id=%s amount=%.2f transaction_type=%s", merchantId, amount, transactionTypeCode)
 
 	// 1. Extract prefix
 	if len(phoneNumber) < 5 {
@@ -316,8 +317,8 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 			result.ProfileFeeBandRate = feeResult.BandRate
 		}
 
-		log.Printf("[FeeCalculator] Disbursement - Amount: %.2f, TransactionFee: %.2f, ProviderFee: %.2f, GrossAmount: %.2f, Commission: %.2f, NetAmount: %.2f",
-			amount, transactionFeeAmount, providerFeeAmount, grossAmount, commissionFeeAmount, netAmount)
+		log.Printf("fee calculation completed merchant_id=%s transaction_type=%s calculation_mode=%s amount=%.2f transaction_fee=%.2f provider_fee=%.2f gross_amount=%.2f commission_fee=%.2f net_amount=%.2f fee_profile_id=%s payment_channel_id=%s",
+			merchantId, transactionTypeCode, calculationMode, amount, transactionFeeAmount, providerFeeAmount, grossAmount, commissionFeeAmount, netAmount, feeProfile.ID, paymentChannel.ID)
 
 		return &result, nil
 	}
@@ -359,8 +360,8 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 			result.ProfileFeeBandRate = feeResult.BandRate
 		}
 
-		log.Printf("[FeeCalculator] Merged mode - Amount: %.2f, MerchantFee: %.2f, ProviderFee: %.2f, TotalFee: %.2f, GrossAmount: %.2f, Commission: %.2f, NetAmount: %.2f",
-			amount, merchantFeeAmount, providerFeeAmount, totalFeeAmount, grossAmount, commissionFeeAmount, netAmount)
+		log.Printf("fee calculation completed merchant_id=%s transaction_type=%s calculation_mode=merged amount=%.2f transaction_fee=%.2f provider_fee=%.2f gross_amount=%.2f commission_fee=%.2f net_amount=%.2f fee_profile_id=%s payment_channel_id=%s",
+			merchantId, transactionTypeCode, amount, totalFeeAmount, providerFeeAmount, grossAmount, commissionFeeAmount, netAmount, feeProfile.ID, paymentChannel.ID)
 
 		return &result, nil
 	} else {
@@ -409,8 +410,8 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 			result.ProfileFeeBandRate = feeResult.BandRate
 		}
 
-		log.Printf("[FeeCalculator] Standard mode - Amount: %.2f, TransactionFee: %.2f, ProviderFee: %.2f, TotalCharge: %.2f, FeeUplift: %.2f, Commission: %.2f, GrossAmount: %.2f, NetAmount: %.2f",
-			amount, transactionFeeAmount, providerFeeAmount, totalFeeToCharge, feeUplift, commissionFeeAmount, grossAmount, netAmount)
+		log.Printf("fee calculation completed merchant_id=%s transaction_type=%s calculation_mode=standard amount=%.2f transaction_fee=%.2f provider_fee=%.2f fee_uplift=%.2f gross_amount=%.2f commission_fee=%.2f net_amount=%.2f fee_profile_id=%s payment_channel_id=%s",
+			merchantId, transactionTypeCode, amount, transactionFeeAmount, providerFeeAmount, feeUplift, grossAmount, commissionFeeAmount, netAmount, feeProfile.ID, paymentChannel.ID)
 
 		return &result, nil
 	}

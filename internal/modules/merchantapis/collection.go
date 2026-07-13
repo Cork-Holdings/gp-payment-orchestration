@@ -24,6 +24,7 @@ type CollectResponse struct {
 }
 
 func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
+	log.Printf("collection request received transaction_ref=%s client_id=%s amount=%.2f currency=ZMW", req.TransactionRef, req.ClientID, req.Amount)
 	if len(req.PhoneNumber) < 12 {
 		return &CollectResponse{
 			Code:    400,
@@ -54,6 +55,7 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 	}
 
 	merchantID := merchant.MerchantID.String()
+	log.Printf("collection merchant resolved transaction_ref=%s merchant_id=%s amount=%.2f", req.TransactionRef, merchantID, req.Amount)
 	// Calculate fees for this collection
 	feeResult, err := feecalculator.CalculateFees(
 		merchantID,
@@ -62,6 +64,7 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 		feecalculator.TransactionTypeCollection,
 	)
 	if err != nil {
+		log.Printf("collection fee calculation failed transaction_ref=%s merchant_id=%s amount=%.2f error=%v", req.TransactionRef, merchantID, req.Amount, err)
 		return &CollectResponse{
 			Code:    400,
 			Status:  "failed",
@@ -72,6 +75,7 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 
 	// Check if fee calculation returned an error status (e.g., unauthorized merchant-channel)
 	if feeResult.Status == "error" {
+		log.Printf("collection fee calculation rejected transaction_ref=%s merchant_id=%s amount=%.2f error=%s", req.TransactionRef, merchantID, req.Amount, feeResult.Error)
 		return &CollectResponse{
 			Code:    400,
 			Status:  "failed",
@@ -80,9 +84,8 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 		}
 	}
 
-	// Log the fee calculation result
-	feeResultJSON, _ := json.Marshal(feeResult)
-	log.Printf("[HandleCollect] Fee calculation result: %s", string(feeResultJSON))
+	log.Printf("collection fees calculated transaction_ref=%s merchant_id=%s amount=%.2f net_amount=%.2f transaction_fee=%.2f provider_fee=%.2f commission_fee=%.2f fee_profile_id=%s payment_channel_id=%s",
+		req.TransactionRef, merchantID, req.Amount, feeResult.NetAmount, feeResult.TransactionFeeAmount, feeResult.ProviderFeeAmount, feeResult.CommissionFeeAmount, feeResult.FeeProfileID, feeResult.PaymentChannelID)
 
 	// Build payload for transactions service
 	transactionPayload := map[string]interface{}{
@@ -102,10 +105,6 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 		"payment_channel_id":     feeResult.PaymentChannelID,
 	}
 
-	// Log the transaction payload (simulating queue send to transactions service)
-	transactionPayloadJSON, _ := json.Marshal(transactionPayload)
-	log.Printf("[HandleCollect] Simulating send to transactions service queue: %s", string(transactionPayloadJSON))
-
 	// Forward to transactions service via RabbitMQ
 	// err = app.MQ.Emit("transactions.process", transactionPayload)
 	// if err != nil {
@@ -118,6 +117,7 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 	responseBytes, err := app.MQ.Request("transactions.create", transactionPayload)
 
 	if err != nil {
+		log.Printf("collection transaction creation failed transaction_ref=%s merchant_id=%s amount=%.2f error=%v", req.TransactionRef, merchantID, req.Amount, err)
 		return &CollectResponse{
 			Code:    400,
 			Status:  "failed",
@@ -136,12 +136,14 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 			Data:    nil,
 		}
 	}
+	log.Printf("collection transaction created transaction_ref=%s merchant_id=%s amount=%.2f status=%s code=%d", req.TransactionRef, merchantID, req.Amount, transactionsResp.Status, transactionsResp.Code)
 
 	//From this step transaction has been created
 	//Get provider via prefix
 	provider := GetProviderFromPhoneNumber(req.PhoneNumber)
 
 	if provider == "Unsupported Provider for "+req.PhoneNumber {
+		log.Printf("collection provider resolution failed transaction_ref=%s merchant_id=%s amount=%.2f", req.TransactionRef, merchantID, req.Amount)
 		return &CollectResponse{
 			Code:    400,
 			Status:  "failed",
@@ -160,9 +162,13 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 		"callback_url":    "", // Optional: can be set from config if needed
 	}
 
+	//Log the request to the MNO service
+	log.Printf("collection MNO dispatch request transaction_ref=%s merchant_id=%s provider=%s amount=%.2f request=%+v", req.TransactionRef, merchantID, provider, req.Amount, mnoPayload)
+
 	mnoRespBytes, err := app.MQ.Request("mno.collection.requests", mnoPayload)
 
 	if err != nil {
+		log.Printf("collection MNO dispatch failed transaction_ref=%s merchant_id=%s provider=%s amount=%.2f error=%v", req.TransactionRef, merchantID, provider, req.Amount, err)
 		return &CollectResponse{
 			Code:    400,
 			Status:  "failed",
@@ -201,6 +207,7 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 
 	// Check if MNO service returned an error
 	if mnoResp.Code != 200 {
+		log.Printf("collection MNO rejected transaction_ref=%s merchant_id=%s provider=%s amount=%.2f code=%d status=%s message=%s", req.TransactionRef, merchantID, provider, req.Amount, mnoResp.Code, mnoResp.Status, mnoResp.Message)
 		return &CollectResponse{
 			Code:    mnoResp.Code,
 			Status:  "failed",
@@ -211,7 +218,7 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 
 	// MNO service accepted the request. Log and return success.
 	// The MNO service will continue processing asynchronously and callback with results.
-	log.Printf("[HandleCollect] MNO service accepted collection request for transaction_ref: %s", req.TransactionRef)
+	log.Printf("collection forwarded to MNO transaction_ref=%s merchant_id=%s provider=%s amount=%.2f status=%s", req.TransactionRef, merchantID, provider, req.Amount, mnoResp.Status)
 
 	return &CollectResponse{
 		Code:    200,
@@ -236,6 +243,7 @@ func HandleCollectionCheckStatus(app *global.App, req *CheckStatusRequest) (*Che
 	)
 
 	if err != nil {
+		log.Printf("collection status check failed transaction_ref=%s client_id=%s error=%v", req.TransactionRef, req.ClientID, err)
 		return nil, err
 	}
 
@@ -245,6 +253,7 @@ func HandleCollectionCheckStatus(app *global.App, req *CheckStatusRequest) (*Che
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("collection status checked transaction_ref=%s client_id=%s status=%s", req.TransactionRef, req.ClientID, response.Status)
 
 	return &response, nil
 

@@ -93,7 +93,7 @@ func (r *rmq) Emit(Event string, data interface{}) error {
 	return nil
 }
 func (r *rmq) Request(event string, data any) ([]byte, error) {
-
+	startedAt := time.Now()
 	body, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
@@ -121,12 +121,15 @@ func (r *rmq) Request(event string, data any) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("mq request published event=%s correlation_id=%s payload_bytes=%d", event, corrID, len(body))
 
 	select {
 	case res := <-ch:
+		log.Printf("mq request completed event=%s correlation_id=%s duration_ms=%d response_bytes=%d", event, corrID, time.Since(startedAt).Milliseconds(), len(res))
 		return res, nil
 
 	case <-time.After(60 * time.Second):
+		log.Printf("mq request timed out event=%s correlation_id=%s duration_ms=%d", event, corrID, time.Since(startedAt).Milliseconds())
 		return nil, fmt.Errorf("timeout")
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -33,6 +34,7 @@ type DisburseResponse struct {
 
 // HandleDisburse processes disbursement requests synchronously, verifying signature and checking balance
 func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseResponse, error) {
+	log.Printf("disbursement request received transaction_ref=%s client_id=%s amount=%.2f currency=ZMW", req.TransactionRef, req.ClientID, req.Amount)
 
 	merchant, err := FindMerchantByClientID(app, req.ClientID)
 
@@ -85,12 +87,14 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 	}
 
 	merchantID := merchant.MerchantID.String()
+	log.Printf("disbursement merchant resolved transaction_ref=%s merchant_id=%s amount=%.2f", req.TransactionRef, merchantID, req.Amount)
 
 	balanceRespBytes, err := app.MQ.Request("merchant.accounts.disbursement.check_balance", map[string]any{
 		"merchant_id": merchantID,
 		"amount":      req.Amount,
 	})
 	if err != nil {
+		log.Printf("disbursement balance check failed transaction_ref=%s merchant_id=%s amount=%.2f error=%v", req.TransactionRef, merchantID, req.Amount, err)
 		return &DisburseResponse{Status: "failed", Error: "BALANCE_CHECK_failed"}, fmt.Errorf("failed to check merchant float balance: %w", err)
 	}
 
@@ -104,6 +108,7 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 	}
 
 	if balanceResp.Code != 200 {
+		log.Printf("disbursement insufficient balance transaction_ref=%s merchant_id=%s amount=%.2f code=%d status=%s", req.TransactionRef, merchantID, req.Amount, balanceResp.Code, balanceResp.Status)
 		if balanceResp.Message == "" {
 			balanceResp.Message = "insufficient float balance"
 		}
@@ -127,6 +132,8 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 	if feeResult.Status == "error" {
 		return &DisburseResponse{Status: "failed", Error: "FEE_CALCULATION_failed"}, errors.New(feeResult.Error)
 	}
+	log.Printf("disbursement fees calculated transaction_ref=%s merchant_id=%s amount=%.2f net_amount=%.2f transaction_fee=%.2f provider_fee=%.2f commission_fee=%.2f fee_profile_id=%s payment_channel_id=%s",
+		req.TransactionRef, merchantID, req.Amount, feeResult.NetAmount, feeResult.TransactionFeeAmount, feeResult.ProviderFeeAmount, feeResult.CommissionFeeAmount, feeResult.FeeProfileID, feeResult.PaymentChannelID)
 
 	transactionPayload := map[string]any{
 		"client_id":              req.ClientID,
@@ -147,11 +154,13 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 	}
 
 	if _, err := app.MQ.Request("transactions.create", transactionPayload); err != nil {
+		log.Printf("disbursement transaction creation failed transaction_ref=%s merchant_id=%s amount=%.2f error=%v", req.TransactionRef, merchantID, req.Amount, err)
 		return &DisburseResponse{Status: "failed", Error: "TRANSACTION_CREATE_failed"}, fmt.Errorf("failed to create disbursement transaction: %w", err)
 	}
 
 	provider := GetProviderFromPhoneNumber(req.PhoneNumber)
 	if provider == "Unsupported Provider for "+req.PhoneNumber {
+		log.Printf("disbursement provider resolution failed transaction_ref=%s merchant_id=%s amount=%.2f", req.TransactionRef, merchantID, req.Amount)
 		return &DisburseResponse{Status: "failed", Error: "UNSUPPORTED_PROVIDER"}, errors.New(provider)
 	}
 
@@ -166,6 +175,7 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 
 	mnoRespBytes, err := app.MQ.Request("mno.disbursement.requests", mnoPayload)
 	if err != nil {
+		log.Printf("disbursement MNO dispatch failed transaction_ref=%s merchant_id=%s provider=%s amount=%.2f error=%v", req.TransactionRef, merchantID, provider, req.Amount, err)
 		return &DisburseResponse{Status: "failed", Error: "MNO_REQUEST_failed"}, fmt.Errorf("failed to forward disbursement to mno service: %w", err)
 	}
 
@@ -179,6 +189,7 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 	}
 
 	if mnoResp.Code != 200 {
+		log.Printf("disbursement MNO rejected transaction_ref=%s merchant_id=%s provider=%s amount=%.2f code=%d status=%s", req.TransactionRef, merchantID, provider, req.Amount, mnoResp.Code, mnoResp.Status)
 		if mnoResp.Message == "" {
 			mnoResp.Message = "mno service rejected disbursement"
 		}
@@ -192,6 +203,7 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 		"amount":          req.Amount,
 		"phone_number":    req.PhoneNumber,
 	})
+	log.Printf("disbursement forwarded to MNO transaction_ref=%s merchant_id=%s provider=%s amount=%.2f status=%s", req.TransactionRef, merchantID, provider, req.Amount, mnoResp.Status)
 
 	return &DisburseResponse{TransactionRef: req.TransactionRef, Status: "PROCESSING"}, nil
 }
@@ -211,6 +223,7 @@ func HandleDisbursementCheckStatus(app *global.App, req *CheckStatusRequest) (*C
 	)
 
 	if err != nil {
+		log.Printf("disbursement status check failed transaction_ref=%s client_id=%s error=%v", req.TransactionRef, req.ClientID, err)
 		return nil, err
 	}
 
@@ -220,6 +233,7 @@ func HandleDisbursementCheckStatus(app *global.App, req *CheckStatusRequest) (*C
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("disbursement status checked transaction_ref=%s client_id=%s status=%s", req.TransactionRef, req.ClientID, response.Status)
 
 	return &response, nil
 
