@@ -105,6 +105,16 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 		"payment_channel_id":     feeResult.PaymentChannelID,
 	}
 
+	//Log transaction payload
+	log.Printf("collection transaction payload transaction_ref=%s merchant_id=%s amount=%.2f request=%+v", req.TransactionRef, merchantID, req.Amount, transactionPayload)
+
+	// return &CollectResponse{
+	// 	Code:    200,
+	// 	Status:  "success",
+	// 	Message: "Collection request received and is being processed",
+	// 	Data:    transactionPayload,
+	// }
+
 	// Forward to transactions service via RabbitMQ
 	// err = app.MQ.Emit("transactions.process", transactionPayload)
 	// if err != nil {
@@ -163,6 +173,7 @@ func HandleCollection(app *global.App, req *CollectRequest) *CollectResponse {
 	}
 
 	//Log the request to the MNO service
+
 	log.Printf("collection MNO dispatch request transaction_ref=%s merchant_id=%s provider=%s amount=%.2f request=%+v", req.TransactionRef, merchantID, provider, req.Amount, mnoPayload)
 
 	mnoRespBytes, err := app.MQ.Request("mno.collection.requests", mnoPayload)
