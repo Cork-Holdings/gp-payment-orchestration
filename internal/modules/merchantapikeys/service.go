@@ -18,6 +18,11 @@ import (
 	"gorm.io/gorm"
 )
 
+var (
+	ErrAuthSignaturePinRequired = errors.New("merchant_id and PIN are required to retrieve an auth signature")
+	ErrInvalidPin               = errors.New("invalid pin")
+)
+
 func CreateMerchantKeys(merchantID string) (*MerchantAPIKey, error) {
 
 	//Parse the merchant ID to ensure it's a valid UUID
@@ -145,15 +150,15 @@ func GetMerchantAPIKeys(req *merchant_api_keys_proto.GetMerchantAPIKeysRequest) 
 	}
 	totalPages := int32(math.Ceil(float64(total) / float64(pageSize)))
 
+	encryptionKey := []byte(os.Getenv("ENCRYPTION_KEY"))
+	if len(encryptionKey) == 0 {
+		return nil, errors.New("ENCRYPTION_KEY not set")
+	}
+
 	var merchantRes []*merchant_api_keys_proto.MerchantAPIKey
 	for _, merchantAPIKey := range merchantAPIKeys {
 
 		var decryptedClientID, decryptedClientSecret string
-		encryptionKey := []byte(os.Getenv("ENCRYPTION_KEY"))
-
-		if len(encryptionKey) == 0 {
-			return nil, errors.New("ENCRYPTION_KEY not set")
-		}
 
 		decryptedClientID, err := utils.Decrypt(merchantAPIKey.ClientID, encryptionKey)
 		if err != nil {
@@ -165,13 +170,28 @@ func GetMerchantAPIKeys(req *merchant_api_keys_proto.GetMerchantAPIKeysRequest) 
 			return nil, fmt.Errorf("failed to decrypt client secret: %v", err)
 		}
 
+		authSignature := ""
+		//Check if PIN is set
+		decryptedPIN := ""
+		if merchantAPIKey.Pin != "" {
+			decryptedPIN, err = utils.Decrypt(merchantAPIKey.Pin, encryptionKey)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decrypt pin: %w", err)
+			}
+		}
+
+		authSignature, err = decryptAuthSignature(merchantAPIKey.AuthSignature, encryptionKey)
+		if err != nil {
+			return nil, err
+		}
+
 		merchantRes = append(merchantRes, &merchant_api_keys_proto.MerchantAPIKey{
 			Id:            merchantAPIKey.ID.String(),
 			MerchantId:    merchantAPIKey.MerchantID.String(),
 			ClientId:      decryptedClientID,
 			ClientSecret:  decryptedClientSecret,
-			Pin:           merchantAPIKey.Pin,
-			AuthSignature: merchantAPIKey.AuthSignature,
+			AuthSignature: authSignature,
+			Pin:           decryptedPIN,
 			Status:        merchantAPIKey.Status,
 		})
 	}
@@ -208,7 +228,11 @@ func UpdateMerchantAPIKey(req *merchant_api_keys_proto.EditMerchantAPIKeyRequest
 		updates["pin"] = encryptedPin
 	}
 	if req.AuthSignature != "" {
-		updates["auth_signature"] = req.AuthSignature
+		encryptedSignature, err := encryptSecret(req.AuthSignature)
+		if err != nil {
+			return err
+		}
+		updates["auth_signature"] = encryptedSignature
 	}
 	if req.Status != "" {
 		updates["status"] = req.Status
@@ -365,13 +389,18 @@ func GenerateAuthSignature(req *merchant_api_keys_proto.GenerateAuthSignatureReq
 
 	signature := hex.EncodeToString(h.Sum(nil))
 
+	encryptedSignature, err := utils.Encrypt(signature, encryptionKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to encrypt auth signature: %w", err)
+	}
+
 	// Save generated signature
 	err = db.
 		Model(&MerchantAPIKey{}).
 		Where("id = ?", merchantAPIKey.ID).
 		Update(
 			"auth_signature",
-			signature,
+			encryptedSignature,
 		).Error
 
 	if err != nil {
@@ -389,6 +418,25 @@ func encryptSecret(value string) (string, error) {
 	}
 
 	return utils.Encrypt(value, key)
+}
+
+func decryptAuthSignature(value string, key []byte) (string, error) {
+	if value == "" {
+		return "", nil
+	}
+
+	signature, err := utils.Decrypt(value, key)
+	if err == nil {
+		return signature, nil
+	}
+
+	if len(value) == sha256.Size*2 {
+		if _, decodeErr := hex.DecodeString(value); decodeErr == nil {
+			return value, nil
+		}
+	}
+
+	return "", fmt.Errorf("failed to decrypt auth signature: %w", err)
 }
 
 func SetPin(req *merchant_api_keys_proto.SetPinRequest) error {

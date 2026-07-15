@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -75,6 +76,10 @@ func GetMerchantAPIKeysHandler(c *gin.Context) {
 	}
 	data, err := merchantapikeys.GetMerchantAPIKeys(req)
 	if err != nil {
+		if errors.Is(err, merchantapikeys.ErrAuthSignaturePinRequired) || errors.Is(err, merchantapikeys.ErrInvalidPin) {
+			utils.RespondWithError(c, http.StatusUnauthorized, err.Error())
+			return
+		}
 		utils.RespondWithError(c, http.StatusInternalServerError, err.Error())
 		return
 	}

@@ -10,6 +10,7 @@
     { "key": "client_id", "value": "", "type": "string" },
     { "key": "client_secret", "value": "", "type": "string" },
     { "key": "bearer_token", "value": "", "type": "string" },
+    { "key": "auth_signature", "value": "", "type": "string" },
     { "key": "transaction_ref", "value": "TXN-{{$timestamp}}", "type": "string" },
     { "key": "fee_profile_id", "value": "", "type": "string" },
     { "key": "payment_channel_id", "value": "", "type": "string" },
@@ -106,7 +107,7 @@
               { "key": "Authorization", "value": "Bearer {{bearer_token}}" },
               { "key": "X-Client-ID", "value": "{{client_id}}" },
               { "key": "X-Transaction-Ref", "value": "{{transaction_ref}}", "description": "Required unique reference for this transaction" },
-              { "key": "X-Auth-Signature", "value": "", "description": "Required HMAC auth signature for disbursements" },
+              { "key": "X-Auth-Signature", "value": "{{auth_signature}}", "description": "Required HMAC-SHA256(client_id:pin, client_secret). Generate it using the Generate Auth Signature request." },
               { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
@@ -115,7 +116,7 @@
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{baseUrl}}/api/v1/mobile-money/disburse", "host": ["{{baseUrl}}"], "path": ["api", "v1", "mobile-money", "disburse"] },
-            "description": "Synchronous disbursement. Requires X-Auth-Signature header. Phone number must be exactly 12 digits."
+            "description": "Synchronous disbursement. Requires X-Auth-Signature generated from HMAC-SHA256(client_id:pin, client_secret). Phone number must be exactly 12 digits."
           }
         },
         {
@@ -171,7 +172,7 @@
             "header": [
               { "key": "Authorization", "value": "Bearer {{bearer_token}}" },
               { "key": "X-Client-ID", "value": "{{client_id}}" },
-              { "key": "X-Auth-Signature", "value": "", "description": "Required HMAC auth signature" }
+              { "key": "X-Auth-Signature", "value": "{{auth_signature}}", "description": "Required HMAC-SHA256(client_id:pin, client_secret)" }
             ],
             "url": { "raw": "{{baseUrl}}/api/v1/mobile-money/disburse/balance", "host": ["{{baseUrl}}"], "path": ["api", "v1", "mobile-money", "disburse", "balance"] },
             "description": "Retrieve the merchant's float/disbursement account balance. Requires X-Auth-Signature."
@@ -193,6 +194,23 @@
             },
             "url": { "raw": "{{baseUrl}}/api/v1/checkout/session", "host": ["{{baseUrl}}"], "path": ["api", "v1", "checkout", "session"] },
             "description": "Create a hosted checkout session. (Implementation in progress)"
+          }
+        },
+        {
+          "name": "Name Lookup",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearer_token}}" },
+              { "key": "X-Client-ID", "value": "{{client_id}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/name-lookup/:phone",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "name-lookup", ":phone"],
+              "variable": [{ "key": "phone", "value": "260971234567", "description": "Phone number to resolve" }]
+            },
+            "description": "Look up the registered account name for a phone number."
           }
         }
       ]
@@ -291,13 +309,13 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/providers/list?page=1&page_size=10&search_query=",
+              "raw": "{{baseUrl}}/providers/list?page=1&page_size=10&provider_name=",
               "host": ["{{baseUrl}}"],
               "path": ["providers", "list"],
               "query": [
                 { "key": "page", "value": "1" },
                 { "key": "page_size", "value": "10" },
-                { "key": "search_query", "value": "" }
+                { "key": "provider_name", "value": "" }
               ]
             }
           }
@@ -352,7 +370,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"MTN Collection\",\n  \"code\": \"mtn_collection\",\n  \"status\": \"active\",\n  \"provider_id\": \"{{provider_id}}\",\n  \"subscription_id\": \"{{subscription_id}}\",\n  \"transaction_type_id\": \"{{transaction_type_id}}\",\n  \"fee_type\": \"band\",\n  \"provider_fee\": \"0.00\"\n}",
+              "raw": "{\n  \"name\": \"MTN Collection\",\n  \"status\": \"active\",\n  \"subscription_id\": \"{{subscription_id}}\",\n  \"transaction_type_id\": \"{{transaction_type_id}}\",\n  \"sub_transaction_type_id\": \"{{sub_transaction_type_id}}\",\n  \"fee_type\": \"band\",\n  \"provider_fee\": \"0.00\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{baseUrl}}/payment-channels/create", "host": ["{{baseUrl}}"], "path": ["payment-channels", "create"] }
@@ -1151,11 +1169,11 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"merchant_id\": \"{{merchant_id}}\",\n  \"client_id\": \"{{client_id}}\",\n  \"client_secret\": \"{{client_secret}}\",\n  \"pin\": \"1234\"\n}",
+              "raw": "{\n  \"merchant_id\": \"{{merchant_id}}\",\n  \"client_id\": \"{{client_id}}\",\n  \"client_secret\": \"{{client_secret}}\",\n  \"pin\": \"12345678\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{baseUrl}}/merchant-api-keys/generate-auth-signature", "host": ["{{baseUrl}}"], "path": ["merchant-api-keys", "generate-auth-signature"] },
-            "description": "Generate an HMAC auth signature for use in disbursement requests (X-Auth-Signature header)."
+            "description": "Generate the HMAC-SHA256(client_id:pin, client_secret) value for the X-Auth-Signature header. Copy the returned signature into {{auth_signature}}."
           }
         },
         {
@@ -1165,7 +1183,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"merchant_id\": \"{{merchant_id}}\",\n  \"pin\": \"1234\"\n}",
+              "raw": "{\n  \"merchant_id\": \"{{merchant_id}}\",\n  \"pin\": \"12345678\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": { "raw": "{{baseUrl}}/merchant-api-keys/set-pin", "host": ["{{baseUrl}}"], "path": ["merchant-api-keys", "set-pin"] },
@@ -1188,7 +1206,7 @@
               "raw": "{\n  \"merchant_id\": \"{{merchant_id}}\",\n  \"ip_address\": \"192.168.1.100\",\n  \"status\": \"pending\",\n  \"submitted_by\": \"admin-user-id\"\n}",
               "options": { "raw": { "language": "json" } }
             },
-            "url": { "raw": "{{baseUrl}}/merchant-ips/add", "host": ["{{baseUrl}}"], "path": ["merchant-ips", "add"] }
+            "url": { "raw": "{{baseUrl}}/merchant-ips/create", "host": ["{{baseUrl}}"], "path": ["merchant-ips", "create"] }
           }
         },
         {
@@ -1196,14 +1214,14 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/merchant-ips/list?page=1&page_size=10&merchant_id=&search_query=",
+              "raw": "{{baseUrl}}/merchant-ips/list?page=1&page_size=10&merchant_id=&status=",
               "host": ["{{baseUrl}}"],
               "path": ["merchant-ips", "list"],
               "query": [
                 { "key": "page", "value": "1" },
                 { "key": "page_size", "value": "10" },
                 { "key": "merchant_id", "value": "" },
-                { "key": "search_query", "value": "" }
+                { "key": "status", "value": "" }
               ]
             }
           }
