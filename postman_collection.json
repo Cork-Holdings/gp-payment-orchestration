@@ -216,6 +216,114 @@
       ]
     },
     {
+      "name": "Admin Merchant API - Mobile Money",
+      "description": "Routes under /api/v1/merchant. These routes currently have no middleware registered. Note: their handlers obtain client_id from authentication middleware, so operations that depend on it will fail until middleware is enabled or the handlers are changed.",
+      "item": [
+        {
+          "name": "Collect (Admin Merchant)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Transaction-Ref", "value": "{{transaction_ref}}", "description": "Required unique reference for this transaction" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"256701234567\",\n  \"amount\": 50000\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/merchant/mobile-money/collect", "host": ["{{baseUrl}}"], "path": ["api", "v1", "merchant", "mobile-money", "collect"] },
+            "description": "Initiate a mobile money collection through the admin merchant route."
+          }
+        },
+        {
+          "name": "Disburse (Admin Merchant)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Transaction-Ref", "value": "{{transaction_ref}}", "description": "Required unique reference for this transaction" },
+              { "key": "X-Auth-Signature", "value": "{{auth_signature}}", "description": "Required HMAC-SHA256(client_id:pin, client_secret)" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"256701234567\",\n  \"amount\": 50000,\n  \"narration\": \"Salary payment\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/merchant/mobile-money/disburse", "host": ["{{baseUrl}}"], "path": ["api", "v1", "merchant", "mobile-money", "disburse"] },
+            "description": "Initiate a mobile money disbursement through the admin merchant route."
+          }
+        },
+        {
+          "name": "Check Collection Status (Admin Merchant)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/merchant/mobile-money/check-status/:transaction_ref",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "merchant", "mobile-money", "check-status", ":transaction_ref"],
+              "variable": [{ "key": "transaction_ref", "value": "{{transaction_ref}}" }]
+            }
+          }
+        },
+        {
+          "name": "Check Collection Balance (Admin Merchant)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/merchant/mobile-money/collect/balance", "host": ["{{baseUrl}}"], "path": ["api", "v1", "merchant", "mobile-money", "collect", "balance"] }
+          }
+        },
+        {
+          "name": "Check Disbursement Status (Admin Merchant)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/merchant/mobile-money/disburse/status/:transaction_ref",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "merchant", "mobile-money", "disburse", "status", ":transaction_ref"],
+              "variable": [{ "key": "transaction_ref", "value": "{{transaction_ref}}" }]
+            }
+          }
+        },
+        {
+          "name": "Check Disbursement Balance (Admin Merchant)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Auth-Signature", "value": "{{auth_signature}}", "description": "Required HMAC-SHA256(client_id:pin, client_secret)" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/merchant/mobile-money/disburse/balance", "host": ["{{baseUrl}}"], "path": ["api", "v1", "merchant", "mobile-money", "disburse", "balance"] }
+          }
+        },
+        {
+          "name": "Create Checkout Session (Admin Merchant)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/merchant/checkout/session", "host": ["{{baseUrl}}"], "path": ["api", "v1", "merchant", "checkout", "session"] },
+            "description": "Route is registered, but its handler is currently empty."
+          }
+        },
+        {
+          "name": "Name Lookup (Admin Merchant)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/merchant/name-lookup/:phone",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "merchant", "name-lookup", ":phone"],
+              "variable": [{ "key": "phone", "value": "260971234567", "description": "Phone number to resolve" }]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Admin - Fee Profiles",
       "description": "Manage fee profiles: name, code, payment channel, transaction type, charge amounts and calculation modes.",
       "item": [

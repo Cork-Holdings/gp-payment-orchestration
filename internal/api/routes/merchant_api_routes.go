@@ -49,6 +49,38 @@ func RegisterMerchantRoutes(e *gin.Engine, app *global.App) {
 		//I. Name Lookup
 		protected.POST("/name-lookup/:phone", merchantapihandlers.HandleNameLookupHandler)
 	}
+
+	// Admin Routes
+	admin := e.Group("/api/v1/merchant")
+	// admin.Use(middleware.IPRateLimiter(app), middleware.AuthMiddleware(app, verifyClient), middleware.TenantRateLimiter(app))
+	{
+		// A. Create Merchant API Key
+		admin.POST("/mobile-money/collect", merchantapihandlers.HandleCollectionHandler)
+
+		// B. Mobile Money Disbursements (Synchronous, X-Auth-Signature validated)
+		admin.POST("/mobile-money/disburse", merchantapihandlers.HandleDisbursementHandler)
+
+		// C. Mobile Money Collection Check Status
+		admin.GET("/mobile-money/check-status/:transaction_ref", merchantapihandlers.HandleCollectionCheckStatusHandler)
+
+		// D. Mobile Money Collection Check Balance
+		admin.GET("/mobile-money/collect/balance", merchantapihandlers.HandleCollectionCheckBalanceHandler)
+
+		// E. Mobile Money Disbursement Check Status
+		admin.GET("/mobile-money/disburse/status/:transaction_ref", merchantapihandlers.HandleDisbursementCheckStatusHandler)
+
+		// F. Mobile Money Disbursement Check Balance
+		admin.GET("/mobile-money/disburse/balance", merchantapihandlers.HandleDisbursementCheckBalanceHandler)
+
+		// G. Create Checkout Session
+		admin.POST("/checkout/session", merchantapihandlers.HandleCreateCheckoutSessionHandler)
+
+		// H. Get Checkout Session
+		// protected.GET("/checkout/session/:id", merchantapihandlers.HandleGetCheckoutSessionHandler)
+
+		//I. Name Lookup
+		admin.POST("/name-lookup/:phone", merchantapihandlers.HandleNameLookupHandler)
+	}
 }
 
 // directVerifyClient verifies tokens directly without going through RabbitMQ

@@ -66,7 +66,7 @@ func HandleCollectionHandler(c *gin.Context) {
 		return
 	}
 
-	clientID := c.GetString("client_id")
+	clientID := c.GetHeader("X-Client-ID")
 
 	collectReq := &merchantapis.CollectRequest{
 		ClientID:       clientID,
@@ -109,7 +109,7 @@ func HandleDisbursementHandler(c *gin.Context) {
 		return
 	}
 
-	clientID := c.GetString("client_id")
+	clientID := c.GetHeader("X-Client-ID")
 
 	disburseReq := &merchantapis.DisburseRequest{
 		ClientID:       clientID,
@@ -137,7 +137,7 @@ func HandleCollectionCheckStatusHandler(c *gin.Context) {
 		return
 	}
 
-	clientID := c.GetString("client_id")
+	clientID := c.GetHeader("X-Client-ID")
 
 	checkStatusReq := &merchantapis.CheckStatusRequest{
 		TransactionRef: transactionRef,
@@ -155,7 +155,7 @@ func HandleCollectionCheckStatusHandler(c *gin.Context) {
 
 func HandleCollectionCheckBalanceHandler(c *gin.Context) {
 
-	clientID := c.GetString("client_id")
+	clientID := c.GetHeader("X-Client-ID")
 
 	checkBalanceReq := &merchantapis.CheckCollectionBalanceRequest{
 		ClientID: clientID,
@@ -180,7 +180,7 @@ func HandleDisbursementCheckStatusHandler(c *gin.Context) {
 		return
 	}
 
-	clientID := c.GetString("client_id")
+	clientID := c.GetHeader("X-Client-ID")
 
 	checkStatusReq := &merchantapis.CheckStatusRequest{
 		TransactionRef: transactionRef,
@@ -199,7 +199,7 @@ func HandleDisbursementCheckStatusHandler(c *gin.Context) {
 
 func HandleDisbursementCheckBalanceHandler(c *gin.Context) {
 
-	clientID := c.GetString("client_id")
+	clientID := c.GetHeader("X-Client-ID")
 
 	xAuthSignature := c.GetHeader("X-Auth-Signature")
 	if xAuthSignature == "" {
@@ -320,7 +320,7 @@ func HandleCreateCheckoutSessionHandler(c *gin.Context) {
 
 func HandleNameLookupHandler(c *gin.Context) {
 
-	clientID := c.GetString("client_id")
+	clientID := c.GetHeader("X-Client-ID")
 
 	phone := c.Param("phone")
 
