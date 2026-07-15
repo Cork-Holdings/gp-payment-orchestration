@@ -212,6 +212,38 @@
             },
             "description": "Look up the registered account name for a phone number."
           }
+        },
+        {
+          "name": "Batch Name Lookup",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{bearer_token}}" },
+              { "key": "X-Client-ID", "value": "{{client_id}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "description": "CSV file containing phone numbers to lookup (must have phone_number, phone, mobile, msisdn etc. header column and 12-digit numbers)",
+                  "type": "file"
+                },
+                {
+                  "key": "lookup_data",
+                  "value": "{\n  \"merchant_id\": \"{{merchant_id}}\"\n}",
+                  "description": "Batch Name Lookup Request metadata",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/batch-name-lookup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "batch-name-lookup"]
+            },
+            "description": "Look up the registered account names for a batch of phone numbers via an uploaded CSV file. Expects a 'file' parameter (CSV file) and a 'lookup_data' JSON string containing the merchant_id."
+          }
         }
       ]
     },
@@ -319,6 +351,34 @@
               "path": ["api", "v1", "merchant", "name-lookup", ":phone"],
               "variable": [{ "key": "phone", "value": "260971234567", "description": "Phone number to resolve" }]
             }
+          }
+        },
+        {
+          "name": "Batch Name Lookup (Admin Merchant)",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "description": "CSV file containing phone numbers to lookup (must have phone_number, phone, mobile, msisdn etc. header column and 12-digit numbers)",
+                  "type": "file"
+                },
+                {
+                  "key": "lookup_data",
+                  "value": "{\n  \"merchant_id\": \"{{merchant_id}}\"\n}",
+                  "description": "Batch Name Lookup Request metadata",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/merchant/batch-name-lookup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "merchant", "batch-name-lookup"]
+            },
+            "description": "Batch Name Lookup for Admin Merchant route. Expects a 'file' parameter (CSV file) and a 'lookup_data' JSON string containing the merchant_id."
           }
         }
       ]

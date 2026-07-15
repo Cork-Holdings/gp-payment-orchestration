@@ -48,6 +48,9 @@ func RegisterMerchantRoutes(e *gin.Engine, app *global.App) {
 
 		//I. Name Lookup
 		protected.POST("/name-lookup/:phone", merchantapihandlers.HandleNameLookupHandler)
+
+		// J. Batch Name Lookup
+		protected.POST("/batch-name-lookup", merchantapihandlers.HandleBatchNameLookupHandler)
 	}
 
 	// Admin Routes
@@ -80,6 +83,9 @@ func RegisterMerchantRoutes(e *gin.Engine, app *global.App) {
 
 		//I. Name Lookup
 		admin.POST("/name-lookup/:phone", merchantapihandlers.HandleNameLookupHandler)
+
+		// J. Batch Name Lookup
+		admin.POST("/batch-name-lookup", merchantapihandlers.HandleBatchNameLookupHandler)
 	}
 }
 

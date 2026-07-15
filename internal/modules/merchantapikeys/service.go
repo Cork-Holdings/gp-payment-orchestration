@@ -18,11 +18,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	ErrAuthSignaturePinRequired = errors.New("merchant_id and PIN are required to retrieve an auth signature")
-	ErrInvalidPin               = errors.New("invalid pin")
-)
-
 func CreateMerchantKeys(merchantID string) (*MerchantAPIKey, error) {
 
 	//Parse the merchant ID to ensure it's a valid UUID

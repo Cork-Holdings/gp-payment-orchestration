@@ -1,12 +1,15 @@
 package merchantapihandlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
 
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/merchantapis"
+	"github.com/Cork-Holdings/gp_payment_orchestration/internal/proto/batch_name_lookup_proto"
+	"github.com/Cork-Holdings/gp_payment_orchestration/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -337,4 +340,37 @@ func HandleNameLookupHandler(c *gin.Context) {
 
 	c.JSON(200, nameLookupResp)
 
+}
+
+func HandleBatchNameLookupHandler(c *gin.Context) {
+
+	app := global.New()
+
+	//FormData
+
+	if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
+		utils.RespondWithError(c, 400, "Failed to parse form", fmt.Sprintf("error: %v", err))
+		return
+	}
+
+	batchNameLookupData := c.Request.FormValue("lookup_data")
+
+	if batchNameLookupData == "" {
+		utils.RespondWithError(c, 400, "Batch Name Lookup Data is missing")
+		return
+	}
+
+	var req batch_name_lookup_proto.BatchNameLookupRequest
+
+	if err := json.Unmarshal([]byte(batchNameLookupData), &req); err != nil {
+		utils.RespondWithError(c, 400, "Unable to marshal data", fmt.Sprintf("error: %v", err))
+		return
+	}
+
+	batchNameLookupResp, err := merchantapis.BatchNameLookup(c, app, &req)
+	if err != nil {
+		utils.RespondWithError(c, 400, "Failed to lookup names", fmt.Sprintf("error: %v", err))
+		return
+	}
+	utils.RespondWithSuccess(c, "Names lookup completed", gin.H{"data": batchNameLookupResp})
 }

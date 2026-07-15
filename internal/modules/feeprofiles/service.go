@@ -246,3 +246,31 @@ func DeleteFeeProfile(Id string) error {
 
 	return nil
 }
+
+type CalculateFeeRequest struct {
+	MerchantID  string
+	PhoneNumber string
+	Amount      float64
+	Currency    string
+}
+
+type CalculateFeeResponse struct {
+	FeeAmount     float64
+	FeePercentage float64
+	FeeFixed      float64
+	FeeMinimum    float64
+	FeeMaximum    float64
+	FeeCurrency   string
+}
+
+// func CalculateFee(req *CalculateFeeRequest) (*CalculateFeeResponse, error) {
+
+// 	feeprofile, err := GetFeeProfile(req.FeeProfileID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return &CalculateFeeResponse{
+// 		FeeAmount: feeprofile.ChargeAmount,
+// 	}, nil
+// }

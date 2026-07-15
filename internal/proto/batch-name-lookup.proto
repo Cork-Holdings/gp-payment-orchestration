@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package batch_name_lookup_proto;
+
+
+option go_package = "/proto/batch_name_lookup_proto;batch_name_lookup_proto";
+
+
+message BatchNameLookupRequest {
+    string merchant_id = 1;
+}
+
+message BatchNameLookupData {
+    string phone_number = 1;
+    string name = 2;
+    string provider = 3;
+}
+
+message BatchNameLookupResponse {
+    repeated BatchNameLookupData data = 1;
+    int32 total_pages = 2;
+    int32 current_page = 3;
+    bool has_more = 4;
+}
+
