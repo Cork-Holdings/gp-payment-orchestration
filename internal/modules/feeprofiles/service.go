@@ -248,29 +248,20 @@ func DeleteFeeProfile(Id string) error {
 }
 
 type CalculateFeeRequest struct {
-	MerchantID  string
-	PhoneNumber string
-	Amount      float64
-	Currency    string
+	MerchantID      string  `json:"merchant_id"`
+	PhoneNumber     string  `json:"phone_number"`
+	Amount          float64 `json:"amount"`
+	Currency        string  `json:"currency"`
+	TransactionType string  `json:"transaction_type"`
 }
 
 type CalculateFeeResponse struct {
-	FeeAmount     float64
-	FeePercentage float64
-	FeeFixed      float64
-	FeeMinimum    float64
-	FeeMaximum    float64
-	FeeCurrency   string
+	FeeAmount        float64 `json:"fee_amount"`
+	FeePercentage    float64 `json:"fee_percentage"`
+	FeeFixed         float64 `json:"fee_fixed"`
+	FeeMinimum       float64 `json:"fee_minimum"`
+	FeeMaximum       float64 `json:"fee_maximum"`
+	FeeCurrency      string  `json:"fee_currency"`
+	PaymentChannelID string  `json:"payment_channel_id"`
+	TransactionType  string  `json:"transaction_type"`
 }
-
-// func CalculateFee(req *CalculateFeeRequest) (*CalculateFeeResponse, error) {
-
-// 	feeprofile, err := GetFeeProfile(req.FeeProfileID)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return &CalculateFeeResponse{
-// 		FeeAmount: feeprofile.ChargeAmount,
-// 	}, nil
-// }

@@ -44,11 +44,11 @@ func GetMQ() *rmq {
 		}
 		mq.Channel = ch
 		ch.ExchangeDeclare(os.Getenv("EXCHANGE"), "topic", true, false, false, false, nil)
-		_, _ = ch.QueueDeclare(os.Getenv("QUEUE_NAME"), true, false, false, false, nil)
-		// ch.QueueBind(q.Name, "transactions.*", os.Getenv("EXCHANGE"), false, nil)
-		// ch.QueueBind(q.Name, "auth.*", os.Getenv("EXCHANGE"), false, nil)
-		// ch.QueueBind(q.Name, "collection.*", os.Getenv("EXCHANGE"), false, nil)
-		// ch.QueueBind(q.Name, "disbursement.*", os.Getenv("EXCHANGE"), false, nil)
+		q, err := ch.QueueDeclare(os.Getenv("QUEUE_NAME"), true, false, false, false, nil)
+		if err != nil {
+			log.Fatalf("Failed to declare queue: %s", err)
+		}
+		ch.QueueBind(q.Name, "fees.calculate", os.Getenv("EXCHANGE"), false, nil)
 
 		// Declare exclusive, auto-delete queue for responses unique to this worker connection instance
 		qResp, err := ch.QueueDeclare(
@@ -173,7 +173,7 @@ func (r *rmq) Consume(app *App, queueName string, reciever func(*App, amqp.Deliv
 	msgs, err := r.Channel.Consume(
 		queueName,
 		"",    // consumer tag
-		true,  // auto-acknowledge
+		false, // acknowledge only after successful processing
 		false, // exclusive
 		false, // no-local
 		false, // no-wait
@@ -185,7 +185,13 @@ func (r *rmq) Consume(app *App, queueName string, reciever func(*App, amqp.Deliv
 	go func() {
 		for msg := range msgs {
 			if err := reciever(app, msg); err != nil {
+				if nackErr := msg.Nack(false, true); nackErr != nil {
+					log.Printf("failed to requeue message after handler error: %v", nackErr)
+				}
 				continue
+			}
+			if ackErr := msg.Ack(false); ackErr != nil {
+				log.Printf("failed to acknowledge processed message: %v", ackErr)
 			}
 		}
 	}()

@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/global"
@@ -415,4 +416,27 @@ func CalculateFees(merchantId string, phoneNumber string, amount float64, transa
 
 		return &result, nil
 	}
+}
+
+func CalculateFee(req *feeprofiles.CalculateFeeRequest) (*feeprofiles.CalculateFeeResponse, error) {
+	txnType := TransactionTypeDisbursement
+	if strings.ToUpper(req.TransactionType) == "MNO_COLLECTION" || strings.ToUpper(req.TransactionType) == "COLLECTION" {
+		txnType = TransactionTypeCollection
+	}
+
+	result, err := CalculateFees(req.MerchantID, req.PhoneNumber, req.Amount, txnType)
+	if err != nil {
+		return nil, err
+	}
+	if result.Status == "error" {
+		return nil, fmt.Errorf(result.Error)
+	}
+
+	return &feeprofiles.CalculateFeeResponse{
+		FeeAmount:        result.TotalFeeAmount,
+		FeePercentage:    result.TransactionFeePercent,
+		FeeCurrency:      req.Currency,
+		PaymentChannelID: result.PaymentChannelID,
+		TransactionType:  result.TransactionType,
+	}, nil
 }
