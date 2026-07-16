@@ -147,7 +147,7 @@ func HandleDisbursement(app *global.App, req *DisburseRequest) (*DisburseRespons
 		"client_id":              req.ClientID,
 		"merchant_id":            merchantID,
 		"phone_number":           req.PhoneNumber,
-		"amount":                 req.Amount,
+		"amount":                 feeResult.GrossAmount,
 		"transaction_ref":        req.TransactionRef,
 		"type":                   "MNO_DISBURSEMENT",
 		"status":                 "pending",
