@@ -32,6 +32,7 @@ func CreateMerchantPaymentChannel(req *merchant_payment_channels_proto.CreateMer
 		RejectionReason:  req.RejectionReason,
 		AssignedBy:       assignedBy,
 		ApprovalStatus:   "pending",
+		AssignedAt:       time.Now(),
 	}
 
 	tx := global.GetDB().Begin()
@@ -214,6 +215,81 @@ func DeleteMerchantPaymentChannel(id string) error {
 		tx.Rollback()
 		return err
 	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	return nil
+}
+
+func ApproveMerchantPaymentChannel(req *merchant_payment_channels_proto.ApproveMerchantPaymentChannelRequest) error {
+
+	//Parse the id
+	merchantPaymentChannelID, err := uuid.Parse(req.Id)
+	if err != nil {
+		return err
+	}
+
+	//Fetch the merchant payment channel
+	merchantPaymentChannel := MerchantPaymentChannel{}
+	if err := global.GetDB().Model(&MerchantPaymentChannel{}).Where("id = ?", merchantPaymentChannelID).First(&merchantPaymentChannel).Error; err != nil {
+		return err
+	}
+
+	updates := map[string]interface{}{}
+	updates["approval_status"] = "approved"
+	updates["approved_by"] = req.ApprovedBy
+	updates["approved_at"] = time.Now()
+
+	tx := global.GetDB().Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
+	if err := tx.Model(&MerchantPaymentChannel{}).Where("id = ?", merchantPaymentChannelID).Updates(updates).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+	return nil
+}
+
+func RejectMerchantPaymentChannel(req *merchant_payment_channels_proto.RejectMerchantPaymentChannelRequest) error {
+	//Parse the id
+	merchantPaymentChannelID, err := uuid.Parse(req.Id)
+	if err != nil {
+		return err
+	}
+
+	//Fetch the merchant payment channel
+	merchantPaymentChannel := MerchantPaymentChannel{}
+	if err := global.GetDB().Model(&MerchantPaymentChannel{}).Where("id = ?", merchantPaymentChannelID).First(&merchantPaymentChannel).Error; err != nil {
+		return err
+	}
+
+	updates := map[string]interface{}{}
+	updates["approval_status"] = "rejected"
+	updates["rejected_by"] = req.RejectedBy
+	updates["rejected_at"] = time.Now()
+	updates["rejection_reason"] = req.RejectionReason
+
+	tx := global.GetDB().Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
+	if err := tx.Model(&MerchantPaymentChannel{}).Where("id = ?", merchantPaymentChannelID).Updates(updates).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
 		return err

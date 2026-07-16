@@ -60,3 +60,15 @@ message EditMerchantPaymentChannelRequest {
     string approved_by = 7;
     string id = 9;
 }
+
+
+message ApproveMerchantPaymentChannelRequest {
+    string id = 1;
+    string approved_by = 2;
+}
+
+message RejectMerchantPaymentChannelRequest {
+    string id = 1;
+    string rejected_by = 2;
+    string rejection_reason = 3;
+}

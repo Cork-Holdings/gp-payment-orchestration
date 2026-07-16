@@ -117,6 +117,8 @@ func RegisterRoutes(e *gin.Engine, app *global.App) {
 		merchantPaymentChannelsRoutes.GET("/get/:id", handlers.GetMerchantPaymentChannelHandler)
 		merchantPaymentChannelsRoutes.PUT("/update", handlers.UpdateMerchantPaymentChannelHandler)
 		merchantPaymentChannelsRoutes.DELETE("/delete/:id", handlers.DeleteMerchantPaymentChannelHandler)
+		merchantPaymentChannelsRoutes.POST("/approve", handlers.ApproveMerchantPaymentChannelHandler)
+		merchantPaymentChannelsRoutes.POST("/reject", handlers.RejectMerchantPaymentChannelHandler)
 	}
 
 	merchantApiKeyRoutes := e.Group("/merchant-api-keys")

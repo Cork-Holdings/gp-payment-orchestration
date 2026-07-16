@@ -94,3 +94,31 @@ func DeleteMerchantPaymentChannelHandler(c *gin.Context) {
 	}
 	utils.RespondWithSuccess(c, "Merchant payment channel deleted successfully")
 }
+
+func ApproveMerchantPaymentChannelHandler(c *gin.Context) {
+	var req merchant_payment_channels_proto.ApproveMerchantPaymentChannelRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.RespondWithError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	err := merchantpaymentchannels.ApproveMerchantPaymentChannel(&req)
+	if err != nil {
+		utils.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.RespondWithSuccess(c, "Merchant payment channel approved successfully")
+}
+
+func RejectMerchantPaymentChannelHandler(c *gin.Context) {
+	var req merchant_payment_channels_proto.RejectMerchantPaymentChannelRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.RespondWithError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	err := merchantpaymentchannels.RejectMerchantPaymentChannel(&req)
+	if err != nil {
+		utils.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.RespondWithSuccess(c, "Merchant payment channel rejected successfully")
+}

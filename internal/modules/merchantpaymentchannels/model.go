@@ -1,6 +1,8 @@
 package merchantpaymentchannels
 
 import (
+	"time"
+
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/common"
 	"github.com/Cork-Holdings/gp_payment_orchestration/internal/modules/paymentchannels"
 	"github.com/google/uuid"
@@ -14,8 +16,12 @@ type MerchantPaymentChannel struct {
 	PaymentChannel   paymentchannels.PaymentChannel `gorm:"foreignKey:PaymentChannelID"`
 	Status           string                         `gorm:"type:varchar(255);inactive:active"`
 	RejectionReason  string                         `gorm:"type:varchar(255);default:null"`
+	RejectedBy       uuid.UUID                      `gorm:"type:uuid;default:null"`
+	RejectedAt       time.Time                      `gorm:"type:timestamp;default:null"`
 	AssignedBy       uuid.UUID                      `gorm:"type:uuid;default:null"`
+	AssignedAt       time.Time                      `gorm:"type:timestamp;default:null"`
 	ApprovedBy       uuid.UUID                      `gorm:"type:uuid;default:null"`
+	ApprovedAt       time.Time                      `gorm:"type:timestamp;default:null"`
 	ApprovalStatus   string                         `gorm:"type:varchar(255);default:pending"`
 	common.Entity
 }

@@ -1267,6 +1267,32 @@
               "variable": [{ "key": "id", "value": "{{merchant_payment_channel_id}}" }]
             }
           }
+        },
+        {
+          "name": "Approve Merchant Payment Channel",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{merchant_payment_channel_id}}\",\n  \"approved_by\": \"admin-user-id\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/merchant-payment-channels/approve", "host": ["{{baseUrl}}"], "path": ["merchant-payment-channels", "approve"] }
+          }
+        },
+        {
+          "name": "Reject Merchant Payment Channel",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{merchant_payment_channel_id}}\",\n  \"rejected_by\": \"admin-user-id\",\n  \"rejection_reason\": \"Missing documentation\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/merchant-payment-channels/reject", "host": ["{{baseUrl}}"], "path": ["merchant-payment-channels", "reject"] }
+          }
         }
       ]
     },

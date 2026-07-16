@@ -513,6 +513,118 @@ func (x *EditMerchantPaymentChannelRequest) GetId() string {
 	return ""
 }
 
+type ApproveMerchantPaymentChannelRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ApprovedBy    string                 `protobuf:"bytes,2,opt,name=approved_by,json=approvedBy,proto3" json:"approved_by,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ApproveMerchantPaymentChannelRequest) Reset() {
+	*x = ApproveMerchantPaymentChannelRequest{}
+	mi := &file_merchant_payment_channels_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ApproveMerchantPaymentChannelRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApproveMerchantPaymentChannelRequest) ProtoMessage() {}
+
+func (x *ApproveMerchantPaymentChannelRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_merchant_payment_channels_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApproveMerchantPaymentChannelRequest.ProtoReflect.Descriptor instead.
+func (*ApproveMerchantPaymentChannelRequest) Descriptor() ([]byte, []int) {
+	return file_merchant_payment_channels_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ApproveMerchantPaymentChannelRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ApproveMerchantPaymentChannelRequest) GetApprovedBy() string {
+	if x != nil {
+		return x.ApprovedBy
+	}
+	return ""
+}
+
+type RejectMerchantPaymentChannelRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Id              string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	RejectedBy      string                 `protobuf:"bytes,2,opt,name=rejected_by,json=rejectedBy,proto3" json:"rejected_by,omitempty"`
+	RejectionReason string                 `protobuf:"bytes,3,opt,name=rejection_reason,json=rejectionReason,proto3" json:"rejection_reason,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *RejectMerchantPaymentChannelRequest) Reset() {
+	*x = RejectMerchantPaymentChannelRequest{}
+	mi := &file_merchant_payment_channels_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RejectMerchantPaymentChannelRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RejectMerchantPaymentChannelRequest) ProtoMessage() {}
+
+func (x *RejectMerchantPaymentChannelRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_merchant_payment_channels_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RejectMerchantPaymentChannelRequest.ProtoReflect.Descriptor instead.
+func (*RejectMerchantPaymentChannelRequest) Descriptor() ([]byte, []int) {
+	return file_merchant_payment_channels_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *RejectMerchantPaymentChannelRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *RejectMerchantPaymentChannelRequest) GetRejectedBy() string {
+	if x != nil {
+		return x.RejectedBy
+	}
+	return ""
+}
+
+func (x *RejectMerchantPaymentChannelRequest) GetRejectionReason() string {
+	if x != nil {
+		return x.RejectionReason
+	}
+	return ""
+}
+
 var File_merchant_payment_channels_proto protoreflect.FileDescriptor
 
 const file_merchant_payment_channels_proto_rawDesc = "" +
@@ -577,7 +689,16 @@ const file_merchant_payment_channels_proto_rawDesc = "" +
 	"assignedBy\x12\x1f\n" +
 	"\vapproved_by\x18\a \x01(\tR\n" +
 	"approvedBy\x12\x0e\n" +
-	"\x02id\x18\t \x01(\tR\x02idBHZF/proto/merchant_payment_channels_proto;merchant_payment_channels_protob\x06proto3"
+	"\x02id\x18\t \x01(\tR\x02id\"W\n" +
+	"$ApproveMerchantPaymentChannelRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
+	"\vapproved_by\x18\x02 \x01(\tR\n" +
+	"approvedBy\"\x81\x01\n" +
+	"#RejectMerchantPaymentChannelRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
+	"\vrejected_by\x18\x02 \x01(\tR\n" +
+	"rejectedBy\x12)\n" +
+	"\x10rejection_reason\x18\x03 \x01(\tR\x0frejectionReasonBHZF/proto/merchant_payment_channels_proto;merchant_payment_channels_protob\x06proto3"
 
 var (
 	file_merchant_payment_channels_proto_rawDescOnce sync.Once
@@ -591,13 +712,15 @@ func file_merchant_payment_channels_proto_rawDescGZIP() []byte {
 	return file_merchant_payment_channels_proto_rawDescData
 }
 
-var file_merchant_payment_channels_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_merchant_payment_channels_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_merchant_payment_channels_proto_goTypes = []any{
-	(*CreateMerchantPaymentChannelRequest)(nil), // 0: merchant_payment_channels_proto.CreateMerchantPaymentChannelRequest
-	(*MerchantPaymentChannel)(nil),              // 1: merchant_payment_channels_proto.MerchantPaymentChannel
-	(*GetMerchantPaymentChannelsRequest)(nil),   // 2: merchant_payment_channels_proto.GetMerchantPaymentChannelsRequest
-	(*GetMerchantPaymentChannelsResponse)(nil),  // 3: merchant_payment_channels_proto.GetMerchantPaymentChannelsResponse
-	(*EditMerchantPaymentChannelRequest)(nil),   // 4: merchant_payment_channels_proto.EditMerchantPaymentChannelRequest
+	(*CreateMerchantPaymentChannelRequest)(nil),  // 0: merchant_payment_channels_proto.CreateMerchantPaymentChannelRequest
+	(*MerchantPaymentChannel)(nil),               // 1: merchant_payment_channels_proto.MerchantPaymentChannel
+	(*GetMerchantPaymentChannelsRequest)(nil),    // 2: merchant_payment_channels_proto.GetMerchantPaymentChannelsRequest
+	(*GetMerchantPaymentChannelsResponse)(nil),   // 3: merchant_payment_channels_proto.GetMerchantPaymentChannelsResponse
+	(*EditMerchantPaymentChannelRequest)(nil),    // 4: merchant_payment_channels_proto.EditMerchantPaymentChannelRequest
+	(*ApproveMerchantPaymentChannelRequest)(nil), // 5: merchant_payment_channels_proto.ApproveMerchantPaymentChannelRequest
+	(*RejectMerchantPaymentChannelRequest)(nil),  // 6: merchant_payment_channels_proto.RejectMerchantPaymentChannelRequest
 }
 var file_merchant_payment_channels_proto_depIdxs = []int32{
 	1, // 0: merchant_payment_channels_proto.GetMerchantPaymentChannelsResponse.merchant_payment_channels:type_name -> merchant_payment_channels_proto.MerchantPaymentChannel
@@ -619,7 +742,7 @@ func file_merchant_payment_channels_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_merchant_payment_channels_proto_rawDesc), len(file_merchant_payment_channels_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
