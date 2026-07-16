@@ -64,7 +64,18 @@ func GetMerchantPaymentChannel(id string) (*MerchantPaymentChannel, error) {
 
 func GetMerchantPaymentChannels(req *merchant_payment_channels_proto.GetMerchantPaymentChannelsRequest) (*merchant_payment_channels_proto.GetMerchantPaymentChannelsResponse, error) {
 	merchantPaymentChannels := []MerchantPaymentChannel{}
-	query := global.GetDB().Preload("PaymentChannel").Model(&MerchantPaymentChannel{}).Where("merchant_id = ?", req.MerchantId)
+	query := global.GetDB().Preload("PaymentChannel").Model(&MerchantPaymentChannel{})
+
+	if req.Status != "" {
+		query = query.Where("status = ?", req.Status)
+	}
+	if req.PaymentChannelId != "" {
+		query = query.Where("payment_channel_id = ?", req.PaymentChannelId)
+	}
+
+	if req.MerchantId != "" {
+		query = query.Where("merchant_id = ?", req.MerchantId)
+	}
 	if req.SearchQuery != "" {
 		query = query.Where("name LIKE ?", "%"+req.SearchQuery+"%")
 	}
