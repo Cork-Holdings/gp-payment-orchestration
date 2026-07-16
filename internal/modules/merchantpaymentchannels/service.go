@@ -237,6 +237,8 @@ func ApproveMerchantPaymentChannel(req *merchant_payment_channels_proto.ApproveM
 	}
 
 	updates := map[string]interface{}{}
+
+	updates["status"] = "active"
 	updates["approval_status"] = "approved"
 	updates["approved_by"] = req.ApprovedBy
 	updates["approved_at"] = time.Now()
